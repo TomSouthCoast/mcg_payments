@@ -1225,9 +1225,18 @@
         );
       };
 
-      const { createRoot } = ReactDOM;
-      const root = createRoot(document.getElementById('root'));
-      root.render(<MCGPaymentApp />);
+    // Wait until the DOM is fully loaded and all scripts are ready before rendering the app
+      document.addEventListener('DOMContentLoaded', () => {
+        const { createRoot } = ReactDOM;
+        const root = createRoot(document.getElementById('root'));
+        root.render(<MCGPaymentApp />);
+      });
+    </script>
+
+    <script>
+      // This is the PWA and Kiosk Mode script, it remains unchanged
+      let deferredPrompt;
+      // ... (rest of the PWA script)
     </script>
 </body>
 </html>
