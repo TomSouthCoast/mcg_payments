@@ -10,23 +10,6 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-  // Debug manifest loading
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-      console.log('SW registrations:', registrations.length);
-    });
-  }
-  
-  // Check if manifest is accessible
-  fetch('/manifest.json')
-    .then(response => {
-      console.log('Manifest fetch status:', response.status);
-      return response.json();
-    })
-    .then(data => console.log('Manifest data:', data))
-    .catch(err => console.error('Manifest fetch error:', err));
-    </script>
 </head>
 <body>
     <div id="install-prompt" style="display: none; position: fixed; bottom: 1rem; left: 1rem; right: 1rem; background-color: white; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); align-items: center; justify-content: space-between; z-index: 1000;">
@@ -651,7 +634,7 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
                   <span className="text-lg font-semibold">Donations</span>
                 </div>
                 <p className="text-gray-600 mt-2">Support the Mendip Caving Group</p>
-              </div>
+              </button>
             </div>
           </div>
         );
