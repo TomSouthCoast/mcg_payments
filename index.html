@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MCG Payment App</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMjQiIGZpbGw9IiMyNTYzZWIiLz4KPHN2ZyB4PSI0OCIgeT0iNDgiIHdpZHRoPSI5NiIgaGVpZGH0PSI5NiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjZmZmZmZmIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPHJlY3QgeD0iMSIgeT0iNCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjE2IiByeD0iMiIgcnk9IjIiLz4KPHN2ZyB4PSI1IiB5PSI4IiB3aWR0aD0iMTQiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMyNTYzZWIiIHN0cm9rZS13aWR0aD0iMiI+CjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjMiLz4KPC9zdmc+Cjwvc3ZnPgo8L3N2Zz4K">
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
@@ -20,46 +20,39 @@
     </div>
 
     <div id="root"></div>
+
+    <div id="kiosk-exit" style="display: none; position: fixed; top: 1rem; right: 1rem; z-index: 2000;">
+        <button onclick="exitKioskMode()" style="background-color: #ef4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer;">Exit Kiosk</button>
+    </div>
     
     <script type="text/babel">
       const { useState, useEffect } = React;
 
-      // Helper component to render any Lucide icon from its data array
-      const LucideIcon = ({ iconData, ...props }) => {
-        if (!iconData) {
-          return null;
-        }
-        const [tag, attrs, children] = iconData;
-        const childElements = children ? children.map((child, i) => React.createElement(LucideIcon, {
-          key: i,
-          iconData: child
-        })) : null;
-        const finalAttrs = { ...attrs, ...props };
-        return React.createElement(tag, finalAttrs, childElements);
-      };
-
-      // Correctly define all icons as components using the helper
-      const ChevronLeft = (props) => <LucideIcon iconData={lucide.icons['chevron-left']} {...props} />;
-      const CreditCard = (props) => <LucideIcon iconData={lucide.icons['credit-card']} {...props} />;
-      const Banknote = (props) => <LucideIcon iconData={lucide.icons.banknote} {...props} />;
-      const Building = (props) => <LucideIcon iconData={lucide.icons.building} {...props} />;
-      const Heart = (props) => <LucideIcon iconData={lucide.icons.heart} {...props} />;
-      const Moon = (props) => <LucideIcon iconData={lucide.icons.moon} {...props} />;
-      const Users = (props) => <LucideIcon iconData={lucide.icons.users} {...props} />;
-      const Calendar = (props) => <LucideIcon iconData={lucide.icons.calendar} {...props} />;
-      const User = (props) => <LucideIcon iconData={lucide.icons.user} {...props} />;
-      const Calculator = (props) => <LucideIcon iconData={lucide.icons.calculator} {...props} />;
-      const Check = (props) => <LucideIcon iconData={lucide.icons.check} {...props} />;
-      const Plus = (props) => <LucideIcon iconData={lucide.icons.plus} {...props} />;
-      const Minus = (props) => <LucideIcon iconData={lucide.icons.minus} {...props} />;
-      const Download = (props) => <LucideIcon iconData={lucide.icons.download} {...props} />;
-      const FileText = (props) => <LucideIcon iconData={lucide.icons['file-text']} {...props} />;
-      const Settings = (props) => <LucideIcon iconData={lucide.icons.settings} {...props} />;
-      const Trash2 = (props) => <LucideIcon iconData={lucide.icons['trash-2']} {...props} />;
-      const Lock = (props) => <LucideIcon iconData={lucide.icons.lock} {...props} />;
-      const LogOut = (props) => <LucideIcon iconData={lucide.icons['log-out']} {...props} />;
+      // SELF-CONTAINED ICON COMPONENTS
+      const Icon = ({ children, ...props }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg>
+      );
+      const Moon = (props) => <Icon {...props}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></Icon>;
+      const Settings = (props) => <Icon {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></Icon>;
+      const Users = (props) => <Icon {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></Icon>;
+      const Calendar = (props) => <Icon {...props}><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></Icon>;
+      const Heart = (props) => <Icon {...props}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></Icon>;
+      const ChevronLeft = (props) => <Icon {...props}><path d="m15 18-6-6 6-6" /></Icon>;
+      const CreditCard = (props) => <Icon {...props}><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></Icon>;
+      const Banknote = (props) => <Icon {...props}><rect width="20" height="12" x="2" y="6" rx="2" /><circle cx="12" cy="12" r="2" /><path d="M6 12h.01M18 12h.01" /></Icon>;
+      const Building = (props) => <Icon {...props}><rect width="16" height="20" x="4" y="2" rx="2" /><path d="M9 22v-4h6v4" /><path d="M8 6h.01" /><path d="M16 6h.01" /><path d="M12 6h.01" /><path d="M12 10h.01" /><path d="M12 14h.01" /><path d="M16 10h.01" /><path d="M16 14h.01" /><path d="M8 10h.01" /><path d="M8 14h.01" /></Icon>;
+      const Lock = (props) => <Icon {...props}><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></Icon>;
+      const LogOut = (props) => <Icon {...props}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></Icon>;
+      const Calculator = (props) => <Icon {...props}><rect width="16" height="20" x="4" y="2" rx="2" /><line x1="8" x2="16" y1="6" y2="6" /><line x1="16" x2="16" y1="14" y2="18" /><path d="M16 10h.01" /><path d="M12 10h.01" /><path d="M8 10h.01" /><path d="M12 14h.01" /><path d="M8 14h.01" /><path d="M12 18h.01" /><path d="M8 18h.01" /></Icon>;
+      const Check = (props) => <Icon {...props}><polyline points="20 6 9 17 4 12" /></Icon>;
+      const Plus = (props) => <Icon {...props}><path d="M5 12h14" /><path d="M12 5v14" /></Icon>;
+      const Minus = (props) => <Icon {...props}><path d="M5 12h14" /></Icon>;
+      const Download = (props) => <Icon {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></Icon>;
+      const FileText = (props) => <Icon {...props}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" x2="8" y1="13" y2="13" /><line x1="16" x2="8" y1="17" y2="17" /><line x1="10" x2="8" y1="9" y2="9" /></Icon>;
+      const Trash2 = (props) => <Icon {...props}><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" x2="10" y1="11" y2="17" /><line x1="14" x2="14" y1="11" y2="17" /></Icon>;
 
       const MCGPaymentApp = () => {
+        // --- Full Component Code ---
         const [currentStep, setCurrentStep] = useState('main');
         const [paymentType, setPaymentType] = useState('');
         const [transactions, setTransactions] = useState([]);
@@ -72,8 +65,8 @@
         const [formData, setFormData] = useState({
           names: [''],
           bedNights: {
-            checkIn: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10), // Yesterday
-            checkOut: new Date().toISOString().slice(0, 10), // Today
+            checkIn: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+            checkOut: new Date().toISOString().slice(0, 10),
             nights: 1,
             members: 1,
             guests: 0
@@ -95,1139 +88,199 @@
           transactionId: null,
           checkoutId: null
         });
-
-        // MCG Membership fee tables from the script
-        const feeTable = {
-          "Probationary": [
-            { start: "2025-01-01", end: "2025-03-31", fee: 40 }, { start: "2025-04-01", end: "2025-06-30", fee: 30 },
-            { start: "2025-07-01", end: "2025-08-31", fee: 20 }, { start: "2025-09-01", end: "2025-09-30", fee: 17 },
-            { start: "2025-10-01", end: "2025-10-31", fee: 13 }, { start: "2025-11-01", end: "2025-11-30", fee: 7 },
-            { start: "2025-12-01", end: "2026-03-31", fee: 40 },
-          ],
-          "Affiliate": [
-            { start: "2025-01-01", end: "2025-03-31", fee: 15 }, { start: "2025-04-01", end: "2025-06-30", fee: 11.25 },
-            { start: "2025-07-01", end: "2025-08-31", fee: 7.5 }, { start: "2025-09-01", end: "2025-09-30", fee: 5 },
-            { start: "2025-10-01", end: "2025-10-31", fee: 3.75 }, { start: "2025-11-01", end: "2025-11-30", fee: 2.5 },
-            { start: "2025-12-01", end: "2026-03-31", fee: 15 },
-          ],
-          "Under18": [{ start: "2025-01-01", end: "2026-03-31", fee: 5 }],
-          "Student": [
-            { start: "2025-01-01", end: "2025-03-31", fee: 40 }, { start: "2025-04-01", end: "2025-06-30", fee: 30 },
-            { start: "2025-07-01", end: "2025-08-31", fee: 20 }, { start: "2025-09-01", end: "2025-09-30", fee: 17 },
-            { start: "2025-10-01", end: "2025-10-31", fee: 13 }, { start: "2025-11-01", end: "2025-11-30", fee: 7 },
-            { start: "2025-12-01", end: "2026-03-31", fee: 40 },
-          ]
-        };
-
-        const bcaFeeTable = {
-          "Probationary": [
-            { start: "2025-01-01", end: "2025-03-31", fee: 24 }, { start: "2025-04-01", end: "2025-06-30", fee: 18 },
-            { start: "2025-07-01", end: "2025-09-30", fee: 12 }, { start: "2025-10-01", end: "2025-11-30", fee: 6 },
-            { start: "2025-12-01", end: "2026-03-31", fee: 24 },
-          ],
-          "Affiliate": [
-            { start: "2025-01-01", end: "2025-03-31", fee: 8 }, { start: "2025-04-01", end: "2025-06-30", fee: 6 },
-            { start: "2025-07-01", end: "2025-09-30", fee: 4 }, { start: "2025-10-01", end: "2025-11-30", fee: 2 },
-            { start: "2025-12-01", end: "2026-03-31", fee: 8 },
-          ],
-          "Under18": [{ start: "2025-01-01", end: "2026-03-31", fee: 0 }],
-          "Student": [
-            { start: "2025-01-01", end: "2025-03-31", fee: 10 }, { start: "2025-04-01", end: "2025-06-30", fee: 7.5 },
-            { start: "2025-07-01", end: "2025-09-30", fee: 5 }, { start: "2025-10-01", end: "2025-11-30", fee: 2.5 },
-            { start: "2025-12-01", end: "2026-03-31", fee: 10 },
-          ]
-        };
-
-        const rates = {
-          bedNight: { member: 5, guest: 7.5 },
-          dayFee: 2,
-          keyFob: 6,
-          kitHireDiscount: -15
-        };
-
+        const feeTable = {"Probationary":[{start:"2025-01-01",end:"2025-03-31",fee:40},{start:"2025-04-01",end:"2025-06-30",fee:30},{start:"2025-07-01",end:"2025-08-31",fee:20},{start:"2025-09-01",end:"2025-09-30",fee:17},{start:"2025-10-01",end:"2025-10-31",fee:13},{start:"2025-11-01",end:"2025-11-30",fee:7},{start:"2025-12-01",end:"2026-03-31",fee:40}],"Affiliate":[{start:"2025-01-01",end:"2025-03-31",fee:15},{start:"2025-04-01",end:"2025-06-30",fee:11.25},{start:"2025-07-01",end:"2025-08-31",fee:7.5},{start:"2025-09-01",end:"2025-09-30",fee:5},{start:"2025-10-01",end:"2025-10-31",fee:3.75},{start:"2025-11-01",end:"2025-11-30",fee:2.5},{start:"2025-12-01",end:"2026-03-31",fee:15}],"Under18":[{start:"2025-01-01",end:"2026-03-31",fee:5}],"Student":[{start:"2025-01-01",end:"2025-03-31",fee:40},{start:"2025-04-01",end:"2025-06-30",fee:30},{start:"2025-07-01",end:"2025-08-31",fee:20},{start:"2025-09-01",end:"2025-09-30",fee:17},{start:"2025-10-01",end:"2025-10-31",fee:13},{start:"2025-11-01",end:"2025-11-30",fee:7},{start:"2025-12-01",end:"2026-03-31",fee:40}]};
+        const bcaFeeTable = {"Probationary":[{start:"2025-01-01",end:"2025-03-31",fee:24},{start:"2025-04-01",end:"2025-06-30",fee:18},{start:"2025-07-01",end:"2025-09-30",fee:12},{start:"2025-10-01",end:"2025-11-30",fee:6},{start:"2025-12-01",end:"2026-03-31",fee:24}],"Affiliate":[{start:"2025-01-01",end:"2025-03-31",fee:8},{start:"2025-04-01",end:"2025-06-30",fee:6},{start:"2025-07-01",end:"2025-09-30",fee:4},{start:"2025-10-01",end:"2025-11-30",fee:2},{start:"2025-12-01",end:"2026-03-31",fee:8}],"Under18":[{start:"2025-01-01",end:"2026-03-31",fee:0}],"Student":[{start:"2025-01-01",end:"2025-03-31",fee:10},{start:"2025-04-01",end:"2025-06-30",fee:7.5},{start:"2025-07-01",end:"2025-09-30",fee:5},{start:"2025-10-01",end:"2025-11-30",fee:2.5},{start:"2025-12-01",end:"2026-03-31",fee:10}]};
+        const rates = { bedNight: { member: 5, guest: 7.5 }, dayFee: 2, keyFob: 6, kitHireDiscount: -15 };
         const ADMIN_PASSWORD = 'MCG2025';
-
-        const handleAdminAccess = () => {
-          setShowAdmin(true);
-          setPasswordInput('');
-          setPasswordError('');
-        };
-
-        const handlePasswordSubmit = (e) => {
-          e.preventDefault();
-          if (passwordInput === ADMIN_PASSWORD) {
-            setIsAdminAuthenticated(true);
-            setPasswordError('');
-            setPasswordInput('');
-          } else {
-            setPasswordError('Incorrect password. Please try again.');
-            setPasswordInput('');
-          }
-        };
-
-        const handleAdminLogout = () => {
-          setIsAdminAuthenticated(false);
-          setShowAdmin(false);
-          setPasswordInput('');
-          setPasswordError('');
-        };
-
-        useEffect(() => {
-          try {
-            const savedTransactions = JSON.parse(localStorage.getItem('mcg_transactions') || '[]');
-            setTransactions(savedTransactions);
-          } catch (error) {
-            console.error('Error loading transactions:', error);
-            setTransactions([]);
-          }
-        }, []);
-
-        useEffect(() => {
-          try {
-            localStorage.setItem('mcg_transactions', JSON.stringify(transactions));
-          } catch (error) {
-            console.error('Error saving transactions:', error);
-          }
-        }, [transactions]);
-
-        const exportTransactions = () => {
-          const dataStr = JSON.stringify(transactions, null, 2);
-          const dataBlob = new Blob([dataStr], { type: 'application/json' });
-          const url = URL.createObjectURL(dataBlob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `mcg-transactions-${new Date().toISOString().slice(0, 10)}.json`;
-          link.click();
-          URL.revokeObjectURL(url);
-        };
-
-        const exportToCSV = () => {
-          const headers = ['Date', 'Transaction ID', 'Type', 'Names', 'Amount', 'Payment Method', 'Status'];
-          const csvContent = [
-            headers.join(','),
-            ...transactions.map(t => [
-              new Date(t.date).toLocaleDateString('en-GB'),
-              t.transactionNumber || t.id,
-              t.type,
-              `"${t.names.join(', ')}"`,
-              t.amount,
-              t.paymentMethod,
-              t.status
-            ].join(','))
-          ].join('\n');
-
-          const blob = new Blob([csvContent], { type: 'text/csv' });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `mcg-transactions-${new Date().toISOString().slice(0, 10)}.csv`;
-          link.click();
-          URL.revokeObjectURL(url);
-        };
-
-        const clearAllData = () => {
-          if (window.confirm('Are you sure you want to clear all transaction data? This cannot be undone.')) {
-            localStorage.removeItem('mcg_transactions');
-            setTransactions([]);
-            alert('All data cleared successfully.');
-          }
-        };
-
-        useEffect(() => {
-          const urlParams = new URLSearchParams(window.location.search);
-          const checkoutId = urlParams.get('checkout_id');
-          const status = urlParams.get('status');
-
-          if (checkoutId) {
-            handlePaymentReturn(checkoutId, status);
-            window.history.replaceState({}, '', window.location.pathname);
-          }
-        }, []);
-
-        const handlePaymentReturn = async (checkoutId, status) => {
-          try {
-            if (status === 'success') {
-              setCurrentStep('confirmation');
-              setTransactions(prev =>
-                prev.map((t, i) => i === prev.length - 1 ? {
-                  ...t,
-                  status: 'completed',
-                  checkoutId
-                } : t)
-              );
-            } else if (status === 'cancelled') {
-              setPaymentError('Payment was cancelled. Please try again.');
-              setCurrentStep('payment');
-            } else {
-              setPaymentError('Payment failed. Please try again or use an alternative payment method.');
-              setCurrentStep('payment');
-            }
-          } catch (error) {
-            setPaymentError('Error processing payment return. Please contact support.');
-            setCurrentStep('payment');
-          }
-        };
-
-        const processSumUpPayment = async (amount, reference, description) => {
-          setIsProcessingPayment(true);
-          setPaymentError(null);
-
-          try {
-            if (!navigator.onLine) {
-              throw new Error('Card payments require internet connection.');
-            }
-
-            const API_BASE_URL = 'https://black-stone-0eb5d5603.1.azurestaticapps.net';
-
-            const checkoutResponse = await fetch(`${API_BASE_URL}/api/create-checkout`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                amount: amount,
-                reference: reference,
-                description: description
-              })
-            });
-
-            if (!checkoutResponse.ok) {
-              const errorData = await checkoutResponse.json();
-              throw new Error(errorData.error || 'Failed to create payment session');
-            }
-
-            const checkoutData = await checkoutResponse.json();
-
-            alert(`Payment created! Checkout ID: ${checkoutData.checkout_id}\nAmount: £${amount}\nIn production, this would activate your SumUp Air device.`);
-
-            setTimeout(() => {
-              setCurrentStep('confirmation');
-              setTransactions(prev =>
-                prev.map((t, i) => i === prev.length - 1 ? {
-                  ...t,
-                  status: 'completed',
-                  transactionId: checkoutData.checkout_id
-                } : t)
-              );
-              setIsProcessingPayment(false);
-            }, 3000);
-
-          } catch (error) {
-            console.error('Payment error:', error);
-            setPaymentError(`Payment error: ${error.message}`);
-            setIsProcessingPayment(false);
-          }
-        };
-
-        const getFeeForDate = (feeArray, date) => {
-          for (let entry of feeArray) {
-            let start = Date.parse(entry.start);
-            let end = Date.parse(entry.end);
-            if (date.getTime() >= start && date.getTime() <= end) {
-              return entry.fee;
-            }
-          }
-          return null;
-        };
-
-        const calculateMembershipFee = () => {
-          const joinDate = new Date(formData.membership.joinDate);
-          const membershipType = formData.membership.type;
-
-          let baseFee = getFeeForDate(feeTable[membershipType], joinDate);
-          let bcaFee = formData.membership.hasBCA ? 0 : (getFeeForDate(bcaFeeTable[membershipType], joinDate) || 0);
-          let keyFobFee = formData.membership.wantsKeyFob ? rates.keyFob : 0;
-          let kitHireDiscount = formData.membership.hasPaidKitHire ? rates.kitHireDiscount : 0;
-
-          if (baseFee === null) return 0;
-
-          let totalFee = baseFee + bcaFee + keyFobFee + kitHireDiscount;
-          return Math.max(0, totalFee);
-        };
-
-        const calculateTotal = () => {
-          let total = 0;
-
-          if (paymentType === 'bed-nights') {
-            const membersCost = formData.bedNights.members * formData.bedNights.nights * rates.bedNight.member;
-            const guestsCost = formData.bedNights.guests * formData.bedNights.nights * rates.bedNight.guest;
-            total = membersCost + guestsCost;
-          } else if (paymentType === 'membership') {
-            total = calculateMembershipFee();
-          } else if (paymentType === 'day-fees') {
-            total = formData.dayFees.people * rates.dayFee;
-          } else if (paymentType === 'donation') {
-            total = parseFloat(formData.donationAmount) || 0;
-          }
-
-          setFormData(prev => ({ ...prev, total }));
-          return total;
-        };
-
-        const calculateNights = (checkIn, checkOut) => {
-          if (!checkIn || !checkOut) return 0;
-          const start = new Date(checkIn);
-          const end = new Date(checkOut);
-          const diffTime = Math.abs(end - start);
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          return diffDays;
-        };
-
-        const addName = () => {
-          setFormData(prev => ({
-            ...prev,
-            names: [...prev.names, '']
-          }));
-        };
-
-        const removeName = (index) => {
-          if (formData.names.length > 1) {
-            setFormData(prev => ({
-              ...prev,
-              names: prev.names.filter((_, i) => i !== index)
-            }));
-          }
-        };
-
-        const updateName = (index, value) => {
-          setFormData(prev => ({
-            ...prev,
-            names: prev.names.map((name, i) => i === index ? value : name)
-          }));
-        };
-
-        const getTransactionPrefix = (paymentType) => {
-          switch (paymentType) {
-            case 'bed-nights': return 'B';
-            case 'membership': return 'M';
-            case 'day-fees': return 'F';
-            case 'donation': return 'D';
-            default: return 'T';
-          }
-        };
-
-        const handlePayment = (method) => {
-          const fullTimestamp = Date.now();
-          const shortId = fullTimestamp.toString().slice(-6); // Last 6 digits
-          const prefix = getTransactionPrefix(paymentType);
-          const transactionId = `${prefix}${shortId}`; // e.g., "B703625"
-
-          const transaction = {
-            id: fullTimestamp,
-            transactionNumber: transactionId,
-            date: new Date().toISOString(),
-            type: paymentType,
-            amount: formData.total,
-            paymentMethod: method,
-            names: formData.names.filter(name => name.trim() !== ''),
-            details: getTransactionDetails(),
-            status: method === 'sumup' ? 'pending' : 'recorded'
-          };
-
-          setTransactions(prev => [...prev, transaction]);
-          setFormData(prev => ({ ...prev, paymentMethod: method, transactionId }));
-
-          if (method === 'sumup') {
-            const description = `MCG ${paymentType.replace('-', ' ')} - ${formData.names.filter(n => n.trim()).join(', ')}`;
-            processSumUpPayment(formData.total, transactionId, description);
-          } else {
-            setCurrentStep('confirmation');
-          }
-        };
-
-        const getTransactionDetails = () => {
-          switch (paymentType) {
-            case 'bed-nights':
-              return {
-                checkIn: formData.bedNights.checkIn,
-                checkOut: formData.bedNights.checkOut,
-                nights: formData.bedNights.nights,
-                members: formData.bedNights.members,
-                guests: formData.bedNights.guests
-              };
-            case 'membership':
-              return {
-                type: formData.membership.type,
-                joinDate: formData.membership.joinDate,
-                hasBCA: formData.membership.hasBCA,
-                wantsKeyFob: formData.membership.wantsKeyFob,
-                hasPaidKitHire: formData.membership.hasPaidKitHire
-              };
-            case 'day-fees':
-              return {
-                date: formData.dayFees.date,
-                people: formData.dayFees.people
-              };
-            case 'donation':
-              return { amount: formData.donationAmount };
-            default:
-              return {};
-          }
-        };
-
-        const resetForm = () => {
-          setCurrentStep('main');
-          setPaymentType('');
-          setIsProcessingPayment(false);
-          setPaymentError(null);
-          setFormData({
-            names: [''],
-            bedNights: {
-              checkIn: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-              checkOut: new Date().toISOString().slice(0, 10),
-              nights: 1,
-              members: 1,
-              guests: 0
-            },
-            membership: {
-              type: 'Probationary',
-              joinDate: new Date().toISOString().slice(0, 10),
-              hasBCA: false,
-              wantsKeyFob: false,
-              hasPaidKitHire: false
-            },
-            dayFees: {
-              date: '',
-              people: 1
-            },
-            donationAmount: '',
-            total: 0,
-            paymentMethod: '',
-            transactionId: null,
-            checkoutId: null
-          });
-        };
-
-        const MainScreen = () => (
-          <div className="space-y-6">
-            <div className="text-center">
-              <div className="bg-blue-600 text-white p-4 rounded-lg mb-6 relative">
-                <button
-                  onClick={handleAdminAccess}
-                  className="absolute top-4 right-4 p-2 text-blue-100 hover:text-white hover:bg-blue-700 rounded"
-                  title="Admin Panel"
-                >
-                  <Settings className="w-5 h-5" />
-                </button>
-                <h1 className="text-2xl font-bold">Mendip Caving Group</h1>
-                <p className="text-blue-100">Payment System</p>
-              </div>
-              <p className="text-gray-600 mb-6">What would you like to pay for today?</p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4">
-              <button
-                onClick={() => {
-                  setPaymentType('bed-nights');
-                  setCurrentStep('details');
-                  setPaymentError(null);
-                }}
-                className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-              >
-                <div className="flex items-center justify-center space-x-3">
-                  <Moon className="w-6 h-6 text-blue-600" />
-                  <span className="text-lg font-semibold">Bed Nights</span>
-                </div>
-                <p className="text-gray-600 mt-2">£{rates.bedNight.member}/night (members) • £{rates.bedNight.guest}/night (guests)</p>
-              </button>
-
-              <button
-                onClick={() => {
-                  setPaymentType('membership');
-                  setCurrentStep('details');
-                  setPaymentError(null);
-                }}
-                className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-              >
-                <div className="flex items-center justify-center space-x-3">
-                  <Users className="w-6 h-6 text-blue-600" />
-                  <span className="text-lg font-semibold">MCG Membership</span>
-                </div>
-                <p className="text-gray-600 mt-2">Variable pricing based on membership type and join date</p>
-              </button>
-
-              <button
-                onClick={() => {
-                  setPaymentType('day-fees');
-                  setCurrentStep('details');
-                  setPaymentError(null);
-                }}
-                className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-              >
-                <div className="flex items-center justify-center space-x-3">
-                  <Calendar className="w-6 h-6 text-blue-600" />
-                  <span className="text-lg font-semibold">Day Fees</span>
-                </div>
-                <p className="text-gray-600 mt-2">£{rates.dayFee} per person per day (showers & kitchen use)</p>
-              </button>
-
-              <button
-                onClick={() => {
-                  setPaymentType('donation');
-                  setCurrentStep('details');
-                  setPaymentError(null);
-                }}
-                className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-              >
-                <div className="flex items-center justify-center space-x-3">
-                  <Heart className="w-6 h-6 text-blue-600" />
-                  <span className="text-lg font-semibold">Donations</span>
-                </div>
-                <p className="text-gray-600 mt-2">Support the Mendip Caving Group</p>
-              </button>
-            </div>
-          </div>
-        );
-
-        const PasswordScreen = () => (
-          <div className="space-y-6">
-            <div className="flex items-center space-x-3 mb-6">
-              <button onClick={() => setShowAdmin(false)} className="text-blue-600 hover:text-blue-800">
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-              <h2 className="text-xl font-bold">Admin Access</h2>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg border">
-              <div className="text-center mb-6">
-                <Lock className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-gray-800">Password Required</h3>
-                <p className="text-gray-600">Enter admin password to access transaction management</p>
-              </div>
-
-              <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                <div>
-                  <input
-                    type="password"
-                    value={passwordInput}
-                    onChange={(e) => setPasswordInput(e.target.value)}
-                    placeholder="Enter admin password"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center"
-                    autoFocus
-                    required
-                  />
-                </div>
-
-                {passwordError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-center">
-                    <p className="text-sm">{passwordError}</p>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Access Admin Panel
-                </button>
-              </form>
-            </div>
-
-            <div className="bg-gray-50 p-4 rounded-lg border">
-              <p className="text-sm text-gray-600 text-center">
-                Admin access is required to view transactions, export data, and manage the system.
-              </p>
-            </div>
-          </div>
-        );
-
-        const AdminScreen = () => (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-3">
-                <button onClick={handleAdminLogout} className="text-blue-600 hover:text-blue-800">
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-                <h2 className="text-xl font-bold">Transaction Management</h2>
-              </div>
-              <button
-                onClick={handleAdminLogout}
-                className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
-                title="Logout"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">Export Data</h3>
-              <div className="grid grid-cols-1 gap-3">
-                <button
-                  onClick={exportToCSV}
-                  className="p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
-                >
-                  <FileText className="w-5 h-5" />
-                  <span>Export to CSV (Excel)</span>
-                </button>
-                <button
-                  onClick={exportTransactions}
-                  className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                >
-                  <Download className="w-5 h-5" />
-                  <span>Export to JSON (Backup)</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg border">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Recent Transactions ({transactions.length})</h3>
-                {transactions.length > 0 && (
-                  <button
-                    onClick={clearAllData}
-                    className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span>Clear All</span>
-                  </button>
-                )}
-              </div>
-
-              {transactions.length === 0 ? (
-                <p className="text-gray-500 italic">No transactions recorded yet.</p>
-              ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {transactions.slice(-10).reverse().map((transaction) => (
-                    <div key={transaction.id} className="border rounded-lg p-4 bg-gray-50">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold">{transaction.transactionNumber || transaction.id}</p>
-                          <p className="text-sm text-gray-600">{transaction.names.join(', ')}</p>
-                          <p className="text-sm text-gray-600">{transaction.type.replace('-', ' ')}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold">£{transaction.amount.toFixed(2)}</p>
-                          <p className="text-sm text-gray-600">{transaction.paymentMethod}</p>
-                          <p className={`text-sm px-2 py-1 rounded text-white ${
-                            transaction.status === 'completed' ? 'bg-green-600' :
-                            transaction.status === 'pending' ? 'bg-yellow-600' :
-                            transaction.status === 'failed' ? 'bg-red-600' :
-                            'bg-gray-600'
-                          }`}>
-                            {transaction.status}
-                          </p>
-                        </div>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        {new Date(transaction.date).toLocaleString('en-GB')}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-              <h4 className="font-semibold text-yellow-800 mb-2">Data Storage</h4>
-              <p className="text-sm text-yellow-700">
-                All transaction data is stored locally on this device. Export regularly for backup.
-                Data will persist until manually cleared or browser storage is reset.
-              </p>
-            </div>
-          </div>
-        );
-
-        const DetailsScreen = () => (
-          <div className="space-y-6">
-            <div className="flex items-center space-x-3 mb-6">
-              <button onClick={() => {
-                setCurrentStep('main');
-                setPaymentError(null);
-              }} className="text-blue-600 hover:text-blue-800">
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-              <h2 className="text-xl font-bold capitalize">{paymentType.replace('-', ' ')}</h2>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">Names *</h3>
-              <div className="space-y-3">
-                {formData.names.map((name, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => updateName(index, e.target.value)}
-                      placeholder={`Name ${index + 1} *`}
-                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                    {formData.names.length > 1 && (
-                      <button
-                        onClick={() => removeName(index)}
-                        className="p-2 text-red-600 hover:text-red-800"
-                      >
-                        <Minus className="w-5 h-5" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  onClick={addName}
-                  className="flex items-center space-x-2 text-blue-600 hover:text-blue-800"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add another name</span>
-                </button>
-              </div>
-            </div>
-
-            {paymentType === 'bed-nights' && (
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Bed Night Details</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Check-in Date *</label>
-                    <input
-                      type="date"
-                      value={formData.bedNights.checkIn}
-                      onChange={(e) => {
-                        const newCheckIn = e.target.value;
-                        const nights = calculateNights(newCheckIn, formData.bedNights.checkOut);
-                        setFormData(prev => ({
-                          ...prev,
-                          bedNights: { ...prev.bedNights, checkIn: newCheckIn, nights }
-                        }));
-                      }}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Check-out Date *</label>
-                    <input
-                      type="date"
-                      value={formData.bedNights.checkOut}
-                      onChange={(e) => {
-                        const newCheckOut = e.target.value;
-                        const nights = calculateNights(formData.bedNights.checkIn, newCheckOut);
-                        setFormData(prev => ({
-                          ...prev,
-                          bedNights: { ...prev.bedNights, checkOut: newCheckOut, nights }
-                        }));
-                      }}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Members</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={formData.bedNights.members}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          bedNights: { ...prev.bedNights, members: parseInt(e.target.value) || 0 }
-                        }))}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Guests</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={formData.bedNights.guests}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          bedNights: { ...prev.bedNights, guests: parseInt(e.target.value) || 0 }
-                        }))}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
-                  {formData.bedNights.nights > 0 && (formData.bedNights.members > 0 || formData.bedNights.guests > 0) && (
-                    <div className="bg-blue-50 p-3 rounded-lg">
-                      <p className="text-sm text-blue-800">
-                        {formData.bedNights.members > 0 && `${formData.bedNights.members} members × ${formData.bedNights.nights} nights × £${rates.bedNight.member} = £${(formData.bedNights.members * formData.bedNights.nights * rates.bedNight.member).toFixed(2)}`}
-                        {formData.bedNights.members > 0 && formData.bedNights.guests > 0 && <br />}
-                        {formData.bedNights.guests > 0 && `${formData.bedNights.guests} guests × ${formData.bedNights.nights} nights × £${rates.bedNight.guest} = £${(formData.bedNights.guests * formData.bedNights.nights * rates.bedNight.guest).toFixed(2)}`}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {paymentType === 'membership' && (
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Membership Details</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Membership Type *</label>
-                    <select
-                      value={formData.membership.type}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        membership: { ...prev.membership, type: e.target.value }
-                      }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    >
-                      <option value="Probationary">Full/Probationary</option>
-                      <option value="Affiliate">Affiliate</option>
-                      <option value="Under18">Under 18</option>
-                      <option value="Student">Student</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Join Date *</label>
-                    <input
-                      type="date"
-                      value={formData.membership.joinDate}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        membership: { ...prev.membership, joinDate: e.target.value }
-                      }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="hasBCA"
-                        checked={formData.membership.hasBCA}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          membership: { ...prev.membership, hasBCA: e.target.checked }
-                        }))}
-                        className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <label htmlFor="hasBCA" className="text-sm font-medium text-gray-700">
-                        Already has BCA membership (waives BCA fee)
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="wantsKeyFob"
-                        checked={formData.membership.wantsKeyFob}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          membership: { ...prev.membership, wantsKeyFob: e.target.checked }
-                        }))}
-                        className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <label htmlFor="wantsKeyFob" className="text-sm font-medium text-gray-700">
-                        Wants key fob (+£{rates.keyFob})
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="hasPaidKitHire"
-                        checked={formData.membership.hasPaidKitHire}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          membership: { ...prev.membership, hasPaidKitHire: e.target.checked }
-                        }))}
-                        className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <label htmlFor="hasPaidKitHire" className="text-sm font-medium text-gray-700">
-                        Has paid kit hire (£{Math.abs(rates.kitHireDiscount)} discount)
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {paymentType === 'day-fees' && (
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Day Fee Details</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
-                    <input
-                      type="date"
-                      value={formData.dayFees.date}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        dayFees: { ...prev.dayFees, date: e.target.value }
-                      }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Number of People</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={formData.dayFees.people}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        dayFees: { ...prev.dayFees, people: parseInt(e.target.value) || 1 }
-                      }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      {formData.dayFees.people} × £{rates.dayFee} = £{(formData.dayFees.people * rates.dayFee).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {paymentType === 'donation' && (
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Donation Amount</h3>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount (£) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.donationAmount}
-                    onChange={(e) => setFormData(prev => ({ ...prev, donationAmount: e.target.value }))}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-              </div>
-            )}
-
-            <button
-              onClick={() => {
-                calculateTotal();
-                setCurrentStep('payment');
-                setPaymentError(null);
-              }}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-              disabled={
-                !formData.names[0]?.trim() ||
-                (paymentType === 'bed-nights' && (!formData.bedNights.checkIn || !formData.bedNights.checkOut || (formData.bedNights.members === 0 && formData.bedNights.guests === 0))) ||
-                (paymentType === 'day-fees' && !formData.dayFees.date) ||
-                (paymentType === 'donation' && (!formData.donationAmount || parseFloat(formData.donationAmount) <= 0))
-              }
-            >
-              <Calculator className="w-5 h-5" />
-              <span>Calculate Total & Continue</span>
-            </button>
-          </div>
-        );
-
-        const PaymentScreen = () => {
-          const membershipBreakdown = paymentType === 'membership' ? (() => {
-            const joinDate = new Date(formData.membership.joinDate);
-            const membershipType = formData.membership.type;
-
-            let baseFee = getFeeForDate(feeTable[membershipType], joinDate) || 0;
-            let bcaFee = formData.membership.hasBCA ? 0 : (getFeeForDate(bcaFeeTable[membershipType], joinDate) || 0);
-            let keyFobFee = formData.membership.wantsKeyFob ? rates.keyFob : 0;
-            let kitHireDiscount = formData.membership.hasPaidKitHire ? rates.kitHireDiscount : 0;
-
-            return { baseFee, bcaFee, keyFobFee, kitHireDiscount };
-          })() : null;
-
-          return (
-            <div className="space-y-6">
-              <div className="flex items-center space-x-3 mb-6">
-                <button onClick={() => {
-                  setCurrentStep('details');
-                  setPaymentError(null);
-                }} className="text-blue-600 hover:text-blue-800">
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-                <h2 className="text-xl font-bold">Payment</h2>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="capitalize">{paymentType.replace('-', ' ')}</span>
-                    <span className="font-semibold">£{formData.total.toFixed(2)}</span>
-                  </div>
-
-                  {paymentType === 'membership' && membershipBreakdown && (
-                    <div className="text-sm text-gray-600 space-y-1 mt-3 pt-3 border-t">
-                      <div className="flex justify-between">
-                        <span>MCG Membership Fee:</span>
-                        <span>£{membershipBreakdown.baseFee.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>BCA Membership Fee:</span>
-                        <span>£{membershipBreakdown.bcaFee.toFixed(2)}</span>
-                      </div>
-                      {membershipBreakdown.keyFobFee > 0 && (
-                        <div className="flex justify-between">
-                          <span>Key Fob Fee:</span>
-                          <span>£{membershipBreakdown.keyFobFee.toFixed(2)}</span>
-                        </div>
-                      )}
-                      {membershipBreakdown.kitHireDiscount < 0 && (
-                        <div className="flex justify-between">
-                          <span>Kit Hire Discount:</span>
-                          <span>£{membershipBreakdown.kitHireDiscount.toFixed(2)}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="border-t pt-2">
-                    <div className="flex justify-between text-lg font-bold">
-                      <span>Total</span>
-                      <span>£{formData.total.toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Payment Method</h3>
-
-                {paymentError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-                    <p className="font-medium">Payment Error</p>
-                    <p className="text-sm">{paymentError}</p>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 gap-4">
-                  <button
-                    onClick={() => handlePayment('sumup')}
-                    disabled={isProcessingPayment}
-                    className={`p-4 border-2 rounded-lg transition-colors flex items-center space-x-3 ${
-                      isProcessingPayment
-                        ? 'border-gray-300 bg-gray-100 cursor-not-allowed'
-                        : 'border-gray-200 hover:border-blue-500 hover:bg-blue-50'
-                    }`}
-                  >
-                    <CreditCard className={`w-6 h-6 ${isProcessingPayment ? 'text-gray-400' : 'text-blue-600'}`} />
-                    <div className="text-left flex-1">
-                      <div className="font-semibold">
-                        {isProcessingPayment ? 'Processing...' : 'Card Payment (SumUp)'}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {isProcessingPayment ? 'Setting up payment...' : 'Pay with debit/credit card'}
-                      </div>
-                    </div>
-                    {isProcessingPayment && (
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => handlePayment('bacs')}
-                    className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center space-x-3"
-                  >
-                    <Building className="w-6 h-6 text-blue-600" />
-                    <div className="text-left">
-                      <div className="font-semibold">Bank Transfer (BACS)</div>
-                      <div className="text-sm text-gray-600">Pay via online banking</div>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => handlePayment('cash')}
-                    className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center space-x-3"
-                  >
-                    <Banknote className="w-6 h-6 text-blue-600" />
-                    <div className="text-left">
-                      <div className="font-semibold">Cash Payment</div>
-                      <div className="text-sm text-gray-600">Pay in person with cash</div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        };
-
-        const ConfirmationScreen = () => (
-          <div className="space-y-6">
-            <div className="text-center">
-              <div className="bg-green-100 p-6 rounded-lg mb-6">
-                <Check className="w-12 h-12 text-green-600 mx-auto mb-3" />
-                <h2 className="text-2xl font-bold text-green-800">Payment Recorded</h2>
-                <p className="text-green-700">Transaction has been saved</p>
-              </div>
-
-              {formData.paymentMethod === 'bacs' && (
-                <div className="bg-blue-50 p-6 rounded-lg text-left">
-                  <h3 className="font-semibold text-blue-800 mb-3">Bank Transfer Details</h3>
-                  <div className="space-y-2 text-sm">
-                    <p><strong>Account Name:</strong> Mendip Caving Group</p>
-                    <p><strong>Sort Code:</strong> 12-34-56</p>
-                    <p><strong>Account Number:</strong> 12345678</p>
-                    <p><strong>Reference:</strong> {formData.transactionId}</p>
-                    <p><strong>Amount:</strong> £{formData.total.toFixed(2)}</p>
-                  </div>
-                </div>
-              )}
-
-              {formData.paymentMethod === 'cash' && (
-                <div className="bg-yellow-50 p-6 rounded-lg text-left">
-                  <h3 className="font-semibold text-yellow-800 mb-3">Cash Payment Instructions</h3>
-                  <div className="space-y-3 text-sm text-yellow-700">
-                    <p className="font-medium">Please follow these steps:</p>
-                    <ol className="list-decimal list-inside space-y-2">
-                      <li>Place £{formData.total.toFixed(2)} in cash in an envelope</li>
-                      <li>Mark the envelope with:</li>
-                      <ul className="list-disc list-inside ml-4 space-y-1">
-                        <li><strong>Name:</strong> {formData.names.filter(n => n.trim()).join(', ')}</li>
-                        <li><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</li>
-                        <li><strong>Transaction #:</strong> {formData.transactionId}</li>
-                      </ul>
-                      <li>Leave the envelope in the designated cash collection area</li>
-                    </ol>
-                    <div className="mt-4 p-3 bg-yellow-100 rounded border border-yellow-200">
-                      <p className="font-semibold text-yellow-900">Your Transaction Number: {formData.transactionId}</p>
-                      <p className="text-xs text-yellow-800 mt-1">Keep this number for your records</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {formData.paymentMethod === 'sumup' && (
-                <div className="bg-green-50 p-6 rounded-lg text-left">
-                  <h3 className="font-semibold text-green-800 mb-3">Card Payment</h3>
-                  <p className="text-sm text-green-700">
-                    Your card payment of £{formData.total.toFixed(2)} has been processed successfully.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={resetForm}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              New Transaction
-            </button>
-          </div>
-        );
-
-        return (
-          <div className="min-h-screen bg-gray-50 p-4">
-            <div className="max-w-md mx-auto">
-              {showAdmin ? (
-                isAdminAuthenticated ? (
-                  <AdminScreen />
-                ) : (
-                  <PasswordScreen />
-                )
-              ) : (
-                <>
-                  {currentStep === 'main' && <MainScreen />}
-                  {currentStep === 'details' && <DetailsScreen />}
-                  {currentStep === 'payment' && <PaymentScreen />}
-                  {currentStep === 'confirmation' && <ConfirmationScreen />}
-                </>
-              )}
-            </div>
-          </div>
-        );
+        const handleAdminAccess = () => { setShowAdmin(true); setPasswordInput(''); setPasswordError(''); };
+        const handlePasswordSubmit = (e) => { e.preventDefault(); if (passwordInput === ADMIN_PASSWORD) { setIsAdminAuthenticated(true); setPasswordError(''); setPasswordInput(''); } else { setPasswordError('Incorrect password. Please try again.'); setPasswordInput(''); } };
+        const handleAdminLogout = () => { setIsAdminAuthenticated(false); setShowAdmin(false); setPasswordInput(''); setPasswordError(''); };
+        useEffect(() => { try { const savedTransactions = JSON.parse(localStorage.getItem('mcg_transactions') || '[]'); setTransactions(savedTransactions); } catch (error) { console.error('Error loading transactions:', error); setTransactions([]); } }, []);
+        useEffect(() => { try { localStorage.setItem('mcg_transactions', JSON.stringify(transactions)); } catch (error) { console.error('Error saving transactions:', error); } }, [transactions]);
+        const exportTransactions = () => { const dataStr = JSON.stringify(transactions, null, 2); const dataBlob = new Blob([dataStr], { type: 'application/json' }); const url = URL.createObjectURL(dataBlob); const link = document.createElement('a'); link.href = url; link.download = `mcg-transactions-${new Date().toISOString().slice(0, 10)}.json`; link.click(); URL.revokeObjectURL(url); };
+        const exportToCSV = () => { const headers = ['Date', 'Transaction ID', 'Type', 'Names', 'Amount', 'Payment Method', 'Status']; const csvContent = [ headers.join(','), ...transactions.map(t => [ new Date(t.date).toLocaleDateString('en-GB'), t.transactionNumber || t.id, t.type, `"${t.names.join(', ')}"`, t.amount, t.paymentMethod, t.status ].join(',')) ].join('\n'); const blob = new Blob([csvContent], { type: 'text/csv' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `mcg-transactions-${new Date().toISOString().slice(0, 10)}.csv`; link.click(); URL.revokeObjectURL(url); };
+        const clearAllData = () => { if (window.confirm('Are you sure you want to clear all transaction data? This cannot be undone.')) { localStorage.removeItem('mcg_transactions'); setTransactions([]); alert('All data cleared successfully.'); } };
+        useEffect(() => { const urlParams = new URLSearchParams(window.location.search); const checkoutId = urlParams.get('checkout_id'); const status = urlParams.get('status'); if (checkoutId) { handlePaymentReturn(checkoutId, status); window.history.replaceState({}, '', window.location.pathname); } }, []);
+        const handlePaymentReturn = async (checkoutId, status) => { try { if (status === 'success') { setCurrentStep('confirmation'); setTransactions(prev => prev.map((t, i) => i === prev.length - 1 ? { ...t, status: 'completed', checkoutId } : t)); } else if (status === 'cancelled') { setPaymentError('Payment was cancelled. Please try again.'); setCurrentStep('payment'); } else { setPaymentError('Payment failed. Please try again or use an alternative payment method.'); setCurrentStep('payment'); } } catch (error) { setPaymentError('Error processing payment return. Please contact support.'); setCurrentStep('payment'); } };
+        const processSumUpPayment = async (amount, reference, description) => { setIsProcessingPayment(true); setPaymentError(null); try { if (!navigator.onLine) { throw new Error('Card payments require internet connection.'); } const API_BASE_URL = 'https://black-stone-0eb5d5603.1.azurestaticapps.net'; const checkoutResponse = await fetch(`${API_BASE_URL}/api/create-checkout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: amount, reference: reference, description: description }) }); if (!checkoutResponse.ok) { const errorData = await checkoutResponse.json(); throw new Error(errorData.error || 'Failed to create payment session'); } const checkoutData = await checkoutResponse.json(); alert(`Payment created! Checkout ID: ${checkoutData.checkout_id}\nAmount: £${amount}\nIn production, this would activate your SumUp Air device.`); setTimeout(() => { setCurrentStep('confirmation'); setTransactions(prev => prev.map((t, i) => i === prev.length - 1 ? { ...t, status: 'completed', transactionId: checkoutData.checkout_id } : t)); setIsProcessingPayment(false); }, 3000); } catch (error) { console.error('Payment error:', error); setPaymentError(`Payment error: ${error.message}`); setIsProcessingPayment(false); } };
+        const getFeeForDate = (feeArray, date) => { for (let entry of feeArray) { let start = Date.parse(entry.start); let end = Date.parse(entry.end); if (date.getTime() >= start && date.getTime() <= end) { return entry.fee; } } return null; };
+        const calculateMembershipFee = () => { const joinDate = new Date(formData.membership.joinDate); const membershipType = formData.membership.type; let baseFee = getFeeForDate(feeTable[membershipType], joinDate); let bcaFee = formData.membership.hasBCA ? 0 : (getFeeForDate(bcaFeeTable[membershipType], joinDate) || 0); let keyFobFee = formData.membership.wantsKeyFob ? rates.keyFob : 0; let kitHireDiscount = formData.membership.hasPaidKitHire ? rates.kitHireDiscount : 0; if (baseFee === null) return 0; let totalFee = baseFee + bcaFee + keyFobFee + kitHireDiscount; return Math.max(0, totalFee); };
+        const calculateTotal = () => { let total = 0; if (paymentType === 'bed-nights') { const membersCost = formData.bedNights.members * formData.bedNights.nights * rates.bedNight.member; const guestsCost = formData.bedNights.guests * formData.bedNights.nights * rates.bedNight.guest; total = membersCost + guestsCost; } else if (paymentType === 'membership') { total = calculateMembershipFee(); } else if (paymentType === 'day-fees') { total = formData.dayFees.people * rates.dayFee; } else if (paymentType === 'donation') { total = parseFloat(formData.donationAmount) || 0; } setFormData(prev => ({ ...prev, total })); return total; };
+        const calculateNights = (checkIn, checkOut) => { if (!checkIn || !checkOut) return 0; const start = new Date(checkIn); const end = new Date(checkOut); const diffTime = Math.abs(end - start); const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); return diffDays; };
+        const addName = () => { setFormData(prev => ({ ...prev, names: [...prev.names, ''] })); };
+        const removeName = (index) => { if (formData.names.length > 1) { setFormData(prev => ({ ...prev, names: prev.names.filter((_, i) => i !== index) })); } };
+        const updateName = (index, value) => { setFormData(prev => ({ ...prev, names: prev.names.map((name, i) => i === index ? value : name) })); };
+        const getTransactionPrefix = (paymentType) => { switch (paymentType) { case 'bed-nights': return 'B'; case 'membership': return 'M'; case 'day-fees': return 'F'; case 'donation': return 'D'; default: return 'T'; } };
+        const handlePayment = (method) => { const fullTimestamp = Date.now(); const shortId = fullTimestamp.toString().slice(-6); const prefix = getTransactionPrefix(paymentType); const transactionId = `${prefix}${shortId}`; const transaction = { id: fullTimestamp, transactionNumber: transactionId, date: new Date().toISOString(), type: paymentType, amount: formData.total, paymentMethod: method, names: formData.names.filter(name => name.trim() !== ''), details: getTransactionDetails(), status: method === 'sumup' ? 'pending' : 'recorded' }; setTransactions(prev => [...prev, transaction]); setFormData(prev => ({ ...prev, paymentMethod: method, transactionId })); if (method === 'sumup') { const description = `MCG ${paymentType.replace('-', ' ')} - ${formData.names.filter(n => n.trim()).join(', ')}`; processSumUpPayment(formData.total, transactionId, description); } else { setCurrentStep('confirmation'); } };
+        const getTransactionDetails = () => { switch (paymentType) { case 'bed-nights': return { checkIn: formData.bedNights.checkIn, checkOut: formData.bedNights.checkOut, nights: formData.bedNights.nights, members: formData.bedNights.members, guests: formData.bedNights.guests }; case 'membership': return { type: formData.membership.type, joinDate: formData.membership.joinDate, hasBCA: formData.membership.hasBCA, wantsKeyFob: formData.membership.wantsKeyFob, hasPaidKitHire: formData.membership.hasPaidKitHire }; case 'day-fees': return { date: formData.dayFees.date, people: formData.dayFees.people }; case 'donation': return { amount: formData.donationAmount }; default: return {}; } };
+        const resetForm = () => { setCurrentStep('main'); setPaymentType(''); setIsProcessingPayment(false); setPaymentError(null); setFormData({ names: [''], bedNights: { checkIn: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10), checkOut: new Date().toISOString().slice(0, 10), nights: 1, members: 1, guests: 0 }, membership: { type: 'Probationary', joinDate: new Date().toISOString().slice(0, 10), hasBCA: false, wantsKeyFob: false, hasPaidKitHire: false }, dayFees: { date: '', people: 1 }, donationAmount: '', total: 0, paymentMethod: '', transactionId: null, checkoutId: null }); };
+        const MainScreen = () => ( <div className="space-y-6"> <div className="text-center"> <div className="bg-blue-600 text-white p-4 rounded-lg mb-6 relative"> <button onClick={handleAdminAccess} className="absolute top-4 right-4 p-2 text-blue-100 hover:text-white hover:bg-blue-700 rounded" title="Admin Panel" > <Settings className="w-5 h-5" /> </button> <h1 className="text-2xl font-bold">Mendip Caving Group</h1> <p className="text-blue-100">Payment System</p> </div> <p className="text-gray-600 mb-6">What would you like to pay for today?</p> </div> <div className="grid grid-cols-1 gap-4"> <button onClick={() => { setPaymentType('bed-nights'); setCurrentStep('details'); setPaymentError(null); }} className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors" > <div className="flex items-center justify-center space-x-3"> <Moon className="w-6 h-6 text-blue-600" /> <span className="text-lg font-semibold">Bed Nights</span> </div> <p className="text-gray-600 mt-2">£{rates.bedNight.member}/night (members) • £{rates.bedNight.guest}/night (guests)</p> </button> <button onClick={() => { setPaymentType('membership'); setCurrentStep('details'); setPaymentError(null); }} className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors" > <div className="flex items-center justify-center space-x-3"> <Users className="w-6 h-6 text-blue-600" /> <span className="text-lg font-semibold">MCG Membership</span> </div> <p className="text-gray-600 mt-2">Variable pricing based on membership type and join date</p> </button> <button onClick={() => { setPaymentType('day-fees'); setCurrentStep('details'); setPaymentError(null); }} className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors" > <div className="flex items-center justify-center space-x-3"> <Calendar className="w-6 h-6 text-blue-600" /> <span className="text-lg font-semibold">Day Fees</span> </div> <p className="text-gray-600 mt-2">£{rates.dayFee} per person per day (showers & kitchen use)</p> </button> <button onClick={() => { setPaymentType('donation'); setCurrentStep('details'); setPaymentError(null); }} className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors" > <div className="flex items-center justify-center space-x-3"> <Heart className="w-6 h-6 text-blue-600" /> <span className="text-lg font-semibold">Donations</span> </div> <p className="text-gray-600 mt-2">Support the Mendip Caving Group</p> </button> </div> </div> );
+        const PasswordScreen = () => ( <div className="space-y-6"> <div className="flex items-center space-x-3 mb-6"> <button onClick={() => setShowAdmin(false)} className="text-blue-600 hover:text-blue-800"> <ChevronLeft className="w-6 h-6" /> </button> <h2 className="text-xl font-bold">Admin Access</h2> </div> <div className="bg-white p-6 rounded-lg border"> <div className="text-center mb-6"> <Lock className="w-12 h-12 text-gray-400 mx-auto mb-3" /> <h3 className="text-lg font-semibold text-gray-800">Password Required</h3> <p className="text-gray-600">Enter admin password to access transaction management</p> </div> <form onSubmit={handlePasswordSubmit} className="space-y-4"> <div> <input type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} placeholder="Enter admin password" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center" autoFocus required /> </div> {passwordError && ( <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-center"> <p className="text-sm">{passwordError}</p> </div> )} <button type="submit" className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors" > Access Admin Panel </button> </form> </div> <div className="bg-gray-50 p-4 rounded-lg border"> <p className="text-sm text-gray-600 text-center"> Admin access is required to view transactions, export data, and manage the system. </p> </div> </div> );
+        const AdminScreen = () => ( <div className="space-y-6"> <div className="flex items-center justify-between mb-6"> <div className="flex items-center space-x-3"> <button onClick={handleAdminLogout} className="text-blue-600 hover:text-blue-800"> <ChevronLeft className="w-6 h-6" /> </button> <h2 className="text-xl font-bold">Transaction Management</h2> </div> <button onClick={handleAdminLogout} className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded" title="Logout" > <LogOut className="w-5 h-5" /> </button> </div> <div className="bg-white p-6 rounded-lg border"> <h3 className="text-lg font-semibold mb-4">Export Data</h3> <div className="grid grid-cols-1 gap-3"> <button onClick={exportToCSV} className="p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2" > <FileText className="w-5 h-5" /> <span>Export to CSV (Excel)</span> </button> <button onClick={exportTransactions} className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2" > <Download className="w-5 h-5" /> <span>Export to JSON (Backup)</span> </button> </div> </div> <div className="bg-white p-6 rounded-lg border"> <div className="flex justify-between items-center mb-4"> <h3 className="text-lg font-semibold">Recent Transactions ({transactions.length})</h3> {transactions.length > 0 && ( <button onClick={clearAllData} className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2" > <Trash2 className="w-4 h-4" /> <span>Clear All</span> </button> )} </div> {transactions.length === 0 ? ( <p className="text-gray-500 italic">No transactions recorded yet.</p> ) : ( <div className="space-y-3 max-h-96 overflow-y-auto"> {transactions.slice(-10).reverse().map((transaction) => ( <div key={transaction.id} className="border rounded-lg p-4 bg-gray-50"> <div className="flex justify-between items-start"> <div> <p className="font-semibold">{transaction.transactionNumber || transaction.id}</p> <p className="text-sm text-gray-600">{transaction.names.join(', ')}</p> <p className="text-sm text-gray-600">{transaction.type.replace('-', ' ')}</p> </div> <div className="text-right"> <p className="font-semibold">£{transaction.amount.toFixed(2)}</p> <p className="text-sm text-gray-600">{transaction.paymentMethod}</p> <p className={`text-sm px-2 py-1 rounded text-white ${ transaction.status === 'completed' ? 'bg-green-600' : transaction.status === 'pending' ? 'bg-yellow-600' : transaction.status === 'failed' ? 'bg-red-600' : 'bg-gray-600' }`}> {transaction.status} </p> </div> </div> <p className="text-xs text-gray-500 mt-2"> {new Date(transaction.date).toLocaleString('en-GB')} </p> </div> ))} </div> )} </div> <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200"> <h4 className="font-semibold text-yellow-800 mb-2">Data Storage</h4> <p className="text-sm text-yellow-700"> All transaction data is stored locally on this device. Export regularly for backup. Data will persist until manually cleared or browser storage is reset. </p> </div> </div> );
+        const DetailsScreen = () => ( <div className="space-y-6"> <div className="flex items-center space-x-3 mb-6"> <button onClick={() => { setCurrentStep('main'); setPaymentError(null); }} className="text-blue-600 hover:text-blue-800"> <ChevronLeft className="w-6 h-6" /> </button> <h2 className="text-xl font-bold capitalize">{paymentType.replace('-', ' ')}</h2> </div> <div className="bg-white p-6 rounded-lg border"> <h3 className="text-lg font-semibold mb-4">Names *</h3> <div className="space-y-3"> {formData.names.map((name, index) => ( <div key={index} className="flex items-center space-x-2"> <input type="text" value={name} onChange={(e) => updateName(index, e.target.value)} placeholder={`Name ${index + 1} *`} className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required /> {formData.names.length > 1 && ( <button onClick={() => removeName(index)} className="p-2 text-red-600 hover:text-red-800" > <Minus className="w-5 h-5" /> </button> )} </div> ))} <button onClick={addName} className="flex items-center space-x-2 text-blue-600 hover:text-blue-800" > <Plus className="w-4 h-4" /> <span>Add another name</span> </button> </div> </div> {paymentType === 'bed-nights' && ( <div className="bg-white p-6 rounded-lg border"> <h3 className="text-lg font-semibold mb-4">Bed Night Details</h3> <div className="grid grid-cols-1 gap-4"> <div> <label className="block text-sm font-medium text-gray-700 mb-1">Check-in Date *</label> <input type="date" value={formData.bedNights.checkIn} onChange={(e) => { const newCheckIn = e.target.value; const nights = calculateNights(newCheckIn, formData.bedNights.checkOut); setFormData(prev => ({ ...prev, bedNights: { ...prev.bedNights, checkIn: newCheckIn, nights } })); }} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required /> </div> <div> <label className="block text-sm font-medium text-gray-700 mb-1">Check-out Date *</label> <input type="date" value={formData.bedNights.checkOut} onChange={(e) => { const newCheckOut = e.target.value; const nights = calculateNights(formData.bedNights.checkIn, newCheckOut); setFormData(prev => ({ ...prev, bedNights: { ...prev.bedNights, checkOut: newCheckOut, nights } })); }} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required /> </div> <div className="grid grid-cols-2 gap-4"> <div> <label className="block text-sm font-medium text-gray-700 mb-1">Members</label> <input type="number" min="0" value={formData.bedNights.members} onChange={(e) => setFormData(prev => ({ ...prev, bedNights: { ...prev.bedNights, members: parseInt(e.target.value) || 0 } }))} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" /> </div> <div> <label className="block text-sm font-medium text-gray-700 mb-1">Guests</label> <input type="number" min="0" value={formData.bedNights.guests} onChange={(e) => setFormData(prev => ({ ...prev, bedNights: { ...prev.bedNights, guests: parseInt(e.target.value) || 0 } }))} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" /> </div> </div> {formData.bedNights.nights > 0 && (formData.bedNights.members > 0 || formData.bedNights.guests > 0) && ( <div className="bg-blue-50 p-3 rounded-lg"> <p className="text-sm text-blue-800"> {formData.bedNights.members > 0 && `${formData.bedNights.members} members × ${formData.bedNights.nights} nights × £${rates.bedNight.member} = £${(formData.bedNights.members * formData.bedNights.nights * rates.bedNight.member).toFixed(2)}`} {formData.bedNights.members > 0 && formData.bedNights.guests > 0 && <br />} {formData.bedNights.guests > 0 && `${formData.bedNights.guests} guests × ${formData.bedNights.nights} nights × £${rates.bedNight.guest} = £${(formData.bedNights.guests * formData.bedNights.nights * rates.bedNight.guest).toFixed(2)}`} </p> </div> )} </div> </div> )} {paymentType === 'membership' && ( <div className="bg-white p-6 rounded-lg border"> <h3 className="text-lg font-semibold mb-4">Membership Details</h3> <div className="grid grid-cols-1 gap-4"> <div> <label className="block text-sm font-medium text-gray-700 mb-1">Membership Type *</label> <select value={formData.membership.type} onChange={(e) => setFormData(prev => ({ ...prev, membership: { ...prev.membership, type: e.target.value } }))} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required > <option value="Probationary">Full/Probationary</option> <option value="Affiliate">Affiliate</option> <option value="Under18">Under 18</option> <option value="Student">Student</option> </select> </div> <div> <label className="block text-sm font-medium text-gray-700 mb-1">Join Date *</label> <input type="date" value={formData.membership.joinDate} onChange={(e) => setFormData(prev => ({ ...prev, membership: { ...prev.membership, joinDate: e.target.value } }))} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required /> </div> <div className="space-y-3"> <div className="flex items-center space-x-2"> <input type="checkbox" id="hasBCA" checked={formData.membership.hasBCA} onChange={(e) => setFormData(prev => ({ ...prev, membership: { ...prev.membership, hasBCA: e.target.checked } }))} className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" /> <label htmlFor="hasBCA" className="text-sm font-medium text-gray-700"> Already has BCA membership (waives BCA fee) </label> </div> <div className="flex items-center space-x-2"> <input type="checkbox" id="wantsKeyFob" checked={formData.membership.wantsKeyFob} onChange={(e) => setFormData(prev => ({ ...prev, membership: { ...prev.membership, wantsKeyFob: e.target.checked } }))} className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" /> <label htmlFor="wantsKeyFob" className="text-sm font-medium text-gray-700"> Wants key fob (+£{rates.keyFob}) </label> </div> <div className="flex items-center space-x-2"> <input type="checkbox" id="hasPaidKitHire" checked={formData.membership.hasPaidKitHire} onChange={(e) => setFormData(prev => ({ ...prev, membership: { ...prev.membership, hasPaidKitHire: e.target.checked } }))} className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" /> <label htmlFor="hasPaidKitHire" className="text-sm font-medium text-gray-700"> Has paid kit hire (£{Math.abs(rates.kitHireDiscount)} discount) </label> </div> </div> </div> </div> )} {paymentType === 'day-fees' && ( <div className="bg-white p-6 rounded-lg border"> <h3 className="text-lg font-semibold mb-4">Day Fee Details</h3> <div className="grid grid-cols-1 gap-4"> <div> <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label> <input type="date" value={formData.dayFees.date} onChange={(e) => setFormData(prev => ({ ...prev, dayFees: { ...prev.dayFees, date: e.target.value } }))} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required /> </div> <div> <label className="block text-sm font-medium text-gray-700 mb-1">Number of People</label> <input type="number" min="1" value={formData.dayFees.people} onChange={(e) => setFormData(prev => ({ ...prev, dayFees: { ...prev.dayFees, people: parseInt(e.target.value) || 1 } }))} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" /> </div> <div className="bg-blue-50 p-3 rounded-lg"> <p className="text-sm text-blue-800"> {formData.dayFees.people} × £{rates.dayFee} = £{(formData.dayFees.people * rates.dayFee).toFixed(2)} </p> </div> </div> </div> )} {paymentType === 'donation' && ( <div className="bg-white p-6 rounded-lg border"> <h3 className="text-lg font-semibold mb-4">Donation Amount</h3> <div> <label className="block text-sm font-medium text-gray-700 mb-1">Amount (£) *</label> <input type="number" step="0.01" min="0" value={formData.donationAmount} onChange={(e) => setFormData(prev => ({ ...prev, donationAmount: e.target.value }))} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required /> </div> </div> )} <button onClick={() => { calculateTotal(); setCurrentStep('payment'); setPaymentError(null); }} className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2" disabled={ !formData.names[0]?.trim() || (paymentType === 'bed-nights' && (!formData.bedNights.checkIn || !formData.bedNights.checkOut || (formData.bedNights.members === 0 && formData.bedNights.guests === 0))) || (paymentType === 'day-fees' && !formData.dayFees.date) || (paymentType === 'donation' && (!formData.donationAmount || parseFloat(formData.donationAmount) <= 0)) } > <Calculator className="w-5 h-5" /> <span>Calculate Total & Continue</span> </button> </div> );
+        const PaymentScreen = () => { const membershipBreakdown = paymentType === 'membership' ? (() => { const joinDate = new Date(formData.membership.joinDate); const membershipType = formData.membership.type; let baseFee = getFeeForDate(feeTable[membershipType], joinDate) || 0; let bcaFee = formData.membership.hasBCA ? 0 : (getFeeForDate(bcaFeeTable[membershipType], joinDate) || 0); let keyFobFee = formData.membership.wantsKeyFob ? rates.keyFob : 0; let kitHireDiscount = formData.membership.hasPaidKitHire ? rates.kitHireDiscount : 0; return { baseFee, bcaFee, keyFobFee, kitHireDiscount }; })() : null; return ( <div className="space-y-6"> <div className="flex items-center space-x-3 mb-6"> <button onClick={() => { setCurrentStep('details'); setPaymentError(null); }} className="text-blue-600 hover:text-blue-800"> <ChevronLeft className="w-6 h-6" /> </button> <h2 className="text-xl font-bold">Payment</h2> </div> <div className="bg-white p-6 rounded-lg border"> <h3 className="text-lg font-semibold mb-4">Order Summary</h3> <div className="space-y-2"> <div className="flex justify-between"> <span className="capitalize">{paymentType.replace('-', ' ')}</span> <span className="font-semibold">£{formData.total.toFixed(2)}</span> </div> {paymentType === 'membership' && membershipBreakdown && ( <div className="text-sm text-gray-600 space-y-1 mt-3 pt-3 border-t"> <div className="flex justify-between"> <span>MCG Membership Fee:</span> <span>£{membershipBreakdown.baseFee.toFixed(2)}</span> </div> <div className="flex justify-between"> <span>BCA Membership Fee:</span> <span>£{membershipBreakdown.bcaFee.toFixed(2)}</span> </div> {membershipBreakdown.keyFobFee > 0 && ( <div className="flex justify-between"> <span>Key Fob Fee:</span> <span>£{membershipBreakdown.keyFobFee.toFixed(2)}</span> </div> )} {membershipBreakdown.kitHireDiscount < 0 && ( <div className="flex justify-between"> <span>Kit Hire Discount:</span> <span>£{membershipBreakdown.kitHireDiscount.toFixed(2)}</span> </div> )} </div> )} <div className="border-t pt-2"> <div className="flex justify-between text-lg font-bold"> <span>Total</span> <span>£{formData.total.toFixed(2)}</span> </div> </div> </div> </div> <div className="bg-white p-6 rounded-lg border"> <h3 className="text-lg font-semibold mb-4">Payment Method</h3> {paymentError && ( <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4"> <p className="font-medium">Payment Error</p> <p className="text-sm">{paymentError}</p> </div> )} <div className="grid grid-cols-1 gap-4"> <button onClick={() => handlePayment('sumup')} disabled={isProcessingPayment} className={`p-4 border-2 rounded-lg transition-colors flex items-center space-x-3 ${ isProcessingPayment ? 'border-gray-300 bg-gray-100 cursor-not-allowed' : 'border-gray-200 hover:border-blue-500 hover:bg-blue-50' }`} > <CreditCard className={`w-6 h-6 ${isProcessingPayment ? 'text-gray-400' : 'text-blue-600'}`} /> <div className="text-left flex-1"> <div className="font-semibold"> {isProcessingPayment ? 'Processing...' : 'Card Payment (SumUp)'} </div> <div className="text-sm text-gray-600"> {isProcessingPayment ? 'Setting up payment...' : 'Pay with debit/credit card'} </div> </div> {isProcessingPayment && ( <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div> )} </button> <button onClick={() => handlePayment('bacs')} className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center space-x-3" > <Building className="w-6 h-6 text-blue-600" /> <div className="text-left"> <div className="font-semibold">Bank Transfer (BACS)</div> <div className="text-sm text-gray-600">Pay via online banking</div> </div> </button> <button onClick={() => handlePayment('cash')} className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center space-x-3" > <Banknote className="w-6 h-6 text-blue-600" /> <div className="text-left"> <div className="font-semibold">Cash Payment</div> <div className="text-sm text-gray-600">Pay in person with cash</div> </div> </button> </div> </div> </div> ); };
+        const ConfirmationScreen = () => ( <div className="space-y-6"> <div className="text-center"> <div className="bg-green-100 p-6 rounded-lg mb-6"> <Check className="w-12 h-12 text-green-600 mx-auto mb-3" /> <h2 className="text-2xl font-bold text-green-800">Payment Recorded</h2> <p className="text-green-700">Transaction has been saved</p> </div> {formData.paymentMethod === 'bacs' && ( <div className="bg-blue-50 p-6 rounded-lg text-left"> <h3 className="font-semibold text-blue-800 mb-3">Bank Transfer Details</h3> <div className="space-y-2 text-sm"> <p><strong>Account Name:</strong> Mendip Caving Group</p> <p><strong>Sort Code:</strong> 12-34-56</p> <p><strong>Account Number:</strong> 12345678</p> <p><strong>Reference:</strong> {formData.transactionId}</p> <p><strong>Amount:</strong> £{formData.total.toFixed(2)}</p> </div> </div> )} {formData.paymentMethod === 'cash' && ( <div className="bg-yellow-50 p-6 rounded-lg text-left"> <h3 className="font-semibold text-yellow-800 mb-3">Cash Payment Instructions</h3> <div className="space-y-3 text-sm text-yellow-700"> <p className="font-medium">Please follow these steps:</p> <ol className="list-decimal list-inside space-y-2"> <li>Place £{formData.total.toFixed(2)} in cash in an envelope</li> <li>Mark the envelope with:</li> <ul className="list-disc list-inside ml-4 space-y-1"> <li><strong>Name:</strong> {formData.names.filter(n => n.trim()).join(', ')}</li> <li><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</li> <li><strong>Transaction #:</strong> {formData.transactionId}</li> </ul> <li>Leave the envelope in the designated cash collection area</li> </ol> <div className="mt-4 p-3 bg-yellow-100 rounded border border-yellow-200"> <p className="font-semibold text-yellow-900">Your Transaction Number: {formData.transactionId}</p> <p className="text-xs text-yellow-800 mt-1">Keep this number for your records</p> </div> </div> </div> )} {formData.paymentMethod === 'sumup' && ( <div className="bg-green-50 p-6 rounded-lg text-left"> <h3 className="font-semibold text-green-800 mb-3">Card Payment</h3> <p className="text-sm text-green-700"> Your card payment of £{formData.total.toFixed(2)} has been processed successfully. </p> </div> )} </div> <button onClick={resetForm} className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors" > New Transaction </button> </div> );
+        return ( <div className="min-h-screen bg-gray-50 p-4"> <div className="max-w-md mx-auto"> {showAdmin ? ( isAdminAuthenticated ? ( <AdminScreen /> ) : ( <PasswordScreen /> ) ) : ( <> {currentStep === 'main' && <MainScreen />} {currentStep === 'details' && <DetailsScreen />} {currentStep === 'payment' && <PaymentScreen />} {currentStep === 'confirmation' && <ConfirmationScreen />} </> )} </div> </div> );
       };
 
-      const { createRoot } = ReactDOM;
-      const root = createRoot(document.getElementById('root'));
-      root.render(<MCGPaymentApp />);
+      document.addEventListener('DOMContentLoaded', () => {
+        const { createRoot } = ReactDOM;
+        const root = createRoot(document.getElementById('root'));
+        root.render(<MCGPaymentApp />);
+      });
+    </script>
+    <script>
+        let deferredPrompt;
+        let tapCount = 0;
+        let tapTimer;
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('ServiceWorker registration failed: ', error);
+                    });
+            });
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installDiv = document.getElementById('install-prompt');
+            if(installDiv) {
+              installDiv.style.display = 'flex';
+            }
+        });
+
+        const installButton = document.getElementById('install-button');
+        if(installButton) {
+          installButton.addEventListener('click', async () => {
+              if (deferredPrompt) {
+                  deferredPrompt.prompt();
+                  const { outcome } = await deferredPrompt.userChoice;
+                  console.log(`User response to the install prompt: ${outcome}`);
+                  deferredPrompt = null;
+                  const installDiv = document.getElementById('install-prompt');
+                  if(installDiv) {
+                    installDiv.style.display = 'none';
+                  }
+              }
+          });
+        }
+
+        const dismissButton = document.getElementById('install-dismiss');
+        if(dismissButton) {
+          dismissButton.addEventListener('click', () => {
+              const installDiv = document.getElementById('install-prompt');
+              if(installDiv) {
+                installDiv.style.display = 'none';
+              }
+          });
+        }
+
+        function enterKioskMode() {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            } else if (document.documentElement.webkitRequestFullscreen) {
+                document.documentElement.webkitRequestFullscreen();
+            }
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(err => {
+                    console.log('Orientation lock failed:', err);
+                });
+            }
+        }
+
+        function exitKioskMode() {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+            const kioskExit = document.getElementById('kiosk-exit');
+            if(kioskExit) {
+              kioskExit.style.display = 'none';
+            }
+        }
+
+        document.addEventListener('click', () => {
+            tapCount++;
+            if (tapCount === 1) {
+                tapTimer = setTimeout(() => {
+                    tapCount = 0;
+                }, 1000);
+            } else if (tapCount === 3) {
+                clearTimeout(tapTimer);
+                tapCount = 0;
+                const kioskExit = document.getElementById('kiosk-exit');
+                if(kioskExit) {
+                  kioskExit.style.display = 'block';
+                  setTimeout(() => {
+                      kioskExit.style.display = 'none';
+                  }, 5000);
+                }
+            }
+        });
+
+        window.addEventListener('load', () => {
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                setTimeout(enterKioskMode, 1000);
+            }
+        });
+
+        document.addEventListener('contextmenu', (e) => {
+            if (document.fullscreenElement) {
+                e.preventDefault();
+            }
+        });
+
+        if ('wakeLock' in navigator) {
+            let wakeLock = null;
+            const requestWakeLock = async () => {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Screen wake lock acquired');
+                } catch (err) {
+                    console.log('Wake lock failed:', err);
+                }
+            };
+            document.addEventListener('visibilitychange', () => {
+                if (wakeLock !== null && document.visibilityState === 'visible') {
+                    requestWakeLock();
+                }
+            });
+            requestWakeLock();
+        }
+
+        const manifestData = {
+            "name": "MCG Payment System",
+            "short_name": "MCG Payments",
+            "description": "Mendip Caving Group Payment Application",
+            "start_url": ".",
+            "display": "standalone",
+            "display_override": ["window-controls-overlay"],
+            "orientation": "any",
+            "theme_color": "#2563eb",
+            "background_color": "#f9fafb",
+            "categories": ["finance", "utilities"],
+            "icons": [
+                {
+                    "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMjQiIGZpbGw9IiMyNTYzZWIiLz4KPHN2ZyB4PSI0OCIgeT0iNDgiIHdpZHRoPSI5NiIgaGVpZGH0PSI5NiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSIjZmZmZmZmIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPHJlY3QgeD0iMSIgeT0iNCIgd2lkdGg9IjIyIiBoZWlnaHQ9IjE2IiByeD0iMiIgcnk9IjIiLz4KPHN2ZyB4PSI1IiB5PSI4IiB3aWR0aD0iMTQiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMyNTYzZWIiIHN0cm9rZS13aWR0aD0iMiI+CjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjMiLz4KPC9zdmc+Cjwvc3ZnPgo8L3N2Zz4K",
+                    "sizes": "192x192",
+                    "type": "image/svg+xml"
+                }
+            ]
+        };
+
+        const manifestBlob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = manifestURL;
+        document.head.appendChild(manifestLink);
     </script>
 </body>
 </html>
