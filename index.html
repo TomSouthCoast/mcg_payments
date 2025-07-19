@@ -21,26 +21,45 @@
     </div>
     <script type="text/babel">
         const { useState, useEffect } = React;
-       // Replace the lucide destructuring with this:
-const ChevronLeft = lucide.ChevronLeft || (() => React.createElement('span', null, '←'));
-const CreditCard = lucide.CreditCard || (() => React.createElement('span', null, '💳'));
-const Banknote = lucide.Banknote || (() => React.createElement('span', null, '💵'));
-const Building = lucide.Building || (() => React.createElement('span', null, '🏦'));
-const Heart = lucide.Heart || (() => React.createElement('span', null, '❤️'));
-const Moon = lucide.Moon || (() => React.createElement('span', null, '🌙'));
-const Users = lucide.Users || (() => React.createElement('span', null, '👥'));
-const Calendar = lucide.Calendar || (() => React.createElement('span', null, '📅'));
-const User = lucide.User || (() => React.createElement('span', null, '👤'));
-const Calculator = lucide.Calculator || (() => React.createElement('span', null, '🧮'));
-const Check = lucide.Check || (() => React.createElement('span', null, '✅'));
-const Plus = lucide.Plus || (() => React.createElement('span', null, '+'));
-const Minus = lucide.Minus || (() => React.createElement('span', null, '-'));
-const Download = lucide.Download || (() => React.createElement('span', null, '⬇️'));
-const FileText = lucide.FileText || (() => React.createElement('span', null, '📄'));
-const Settings = lucide.Settings || (() => React.createElement('span', null, '⚙️'));
-const Trash2 = lucide.Trash2 || (() => React.createElement('span', null, '🗑️'));
-const Lock = lucide.Lock || (() => React.createElement('span', null, '🔒'));
-const LogOut = lucide.LogOut || (() => React.createElement('span', null, '🚪'));
+       
+const ChevronLeft = (props) => <LucideIcon iconData={lucide.icons['chevron-left']} {...props} />;
+const CreditCard = (props) => <LucideIcon iconData={lucide.icons['credit-card']} {...props} />;
+const Banknote = (props) => <LucideIcon iconData={lucide.icons.banknote} {...props} />;
+const Building = (props) => <LucideIcon iconData={lucide.icons.building} {...props} />;
+const Heart = (props) => <LucideIcon iconData={lucide.icons.heart} {...props} />;
+const Moon = (props) => <LucideIcon iconData={lucide.icons.moon} {...props} />;
+const Users = (props) => <LucideIcon iconData={lucide.icons.users} {...props} />;
+const Calendar = (props) => <LucideIcon iconData={lucide.icons.calendar} {...props} />;
+const User = (props) => <LucideIcon iconData={lucide.icons.user} {...props} />;
+const Calculator = (props) => <LucideIcon iconData={lucide.icons.calculator} {...props} />;
+const Check = (props) => <LucideIcon iconData={lucide.icons.check} {...props} />;
+const Plus = (props) => <LucideIcon iconData={lucide.icons.plus} {...props} />;
+const Minus = (props) => <LucideIcon iconData={lucide.icons.minus} {...props} />;
+const Download = (props) => <LucideIcon iconData={lucide.icons.download} {...props} />;
+const FileText = (props) => <LucideIcon iconData={lucide.icons['file-text']} {...props} />;
+const Settings = (props) => <LucideIcon iconData={lucide.icons.settings} {...props} />;
+const Trash2 = (props) => <LucideIcon iconData={lucide.icons['trash-2']} {...props} />;
+const Lock = (props) => <LucideIcon iconData={lucide.icons.lock} {...props} />;
+const LogOut = (props) => <LucideIcon iconData={lucide.icons['log-out']} {...props} />;;
+
+const LucideIcon = ({ iconData, ...props }) => {
+    if (!iconData) {
+        return null;
+    }
+
+    const [tag, attrs, children] = iconData;
+
+    // Recursively create child elements if they exist
+    const childElements = children ? children.map((child, i) => React.createElement(LucideIcon, {
+        key: i,
+        iconData: child
+    })) : null;
+
+    // Combine default icon attributes with props passed to the component (like className)
+    const finalAttrs = { ...attrs, ...props };
+    
+    return React.createElement(tag, finalAttrs, childElements);
+};
 
         const MCGPaymentApp = () => {
           const [currentStep, setCurrentStep] = useState('main');
