@@ -131,6 +131,8 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
         const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
         const [passwordInput, setPasswordInput] = useState('');
         const [passwordError, setPasswordError] = useState('');
+        const [showFeeEditor, setShowFeeEditor] = useState(false);
+        const [editingFees, setEditingFees] = useState(null);
         const [formData, setFormData] = useState({
           names: [''],
           bedNights: {
@@ -159,7 +161,7 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
         });
 
         // MCG Membership fee tables from the script
-        const feeTable = {
+        const defaultFeeTable = {
           "Probationary": [
             { start: "2025-01-01", end: "2025-03-31", fee: 40 }, { start: "2025-04-01", end: "2025-06-30", fee: 30 },
             { start: "2025-07-01", end: "2025-08-31", fee: 20 }, { start: "2025-09-01", end: "2025-09-30", fee: 17 },
@@ -181,7 +183,7 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
           ]
         };
 
-        const bcaFeeTable = {
+        const defaultBcaFeeTable = {
           "Probationary": [
             { start: "2025-01-01", end: "2025-03-31", fee: 24 }, { start: "2025-04-01", end: "2025-06-30", fee: 18 },
             { start: "2025-07-01", end: "2025-09-30", fee: 12 }, { start: "2025-10-01", end: "2025-11-30", fee: 6 },
@@ -199,6 +201,25 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
             { start: "2025-12-01", end: "2026-03-31", fee: 10 },
           ]
         };
+
+        // Load custom fees from localStorage or use defaults
+        const [customFees, setCustomFees] = useState(() => {
+          try {
+            const saved = localStorage.getItem('mcg_custom_fees');
+            return saved ? JSON.parse(saved) : null;
+          } catch (error) {
+            console.error('Error loading custom fees:', error);
+            return null;
+          }
+        });
+
+        // Get current fee tables (reactive to customFees changes)
+        const getCurrentFeeTables = () => ({
+          feeTable: customFees?.membershipFees || defaultFeeTable,
+          bcaFeeTable: customFees?.bcaFees || defaultBcaFeeTable
+        });
+
+        const { feeTable, bcaFeeTable } = getCurrentFeeTables();
 
         const rates = {
           bedNight: { member: 5, guest: 7.5 },
@@ -230,8 +251,50 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
         const handleAdminLogout = () => {
           setIsAdminAuthenticated(false);
           setShowAdmin(false);
+          setShowFeeEditor(false);
+          setEditingFees(null);
           setPasswordInput('');
           setPasswordError('');
+        };
+
+        const saveFees = (newFees) => {
+          try {
+            localStorage.setItem('mcg_custom_fees', JSON.stringify(newFees));
+            setCustomFees(newFees);
+            alert('Fees updated successfully!');
+          } catch (error) {
+            console.error('Error saving fees:', error);
+            alert('Error saving fees. Please try again.');
+          }
+        };
+
+        const resetFeesToDefault = () => {
+          if (window.confirm('Are you sure you want to reset all fees to default values? This cannot be undone.')) {
+            localStorage.removeItem('mcg_custom_fees');
+            setCustomFees(null);
+            setEditingFees(null);
+            alert('Fees reset to default values.');
+          }
+        };
+
+        const startEditingFees = () => {
+          setEditingFees({
+            membershipFees: JSON.parse(JSON.stringify(feeTable)),
+            bcaFees: JSON.parse(JSON.stringify(bcaFeeTable))
+          });
+          setShowFeeEditor(true);
+        };
+
+        const updateFeeAmount = (feeType, membershipType, periodIndex, newAmount) => {
+          setEditingFees(prev => ({
+            ...prev,
+            [feeType]: {
+              ...prev[feeType],
+              [membershipType]: prev[feeType][membershipType].map((period, index) =>
+                index === periodIndex ? { ...period, fee: parseFloat(newAmount) || 0 } : period
+              )
+            }
+          }));
         };
 
         useEffect(() => {
@@ -251,6 +314,17 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
             console.error('Error saving transactions:', error);
           }
         }, [transactions]);
+
+        // Save custom fees when they change
+        useEffect(() => {
+          if (customFees) {
+            try {
+              localStorage.setItem('mcg_custom_fees', JSON.stringify(customFees));
+            } catch (error) {
+              console.error('Error saving custom fees:', error);
+            }
+          }
+        }, [customFees]);
 
         const exportTransactions = () => {
           const dataStr = JSON.stringify(transactions, null, 2);
@@ -437,6 +511,7 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
         };
 
         const calculateMembershipFee = () => {
+          const { feeTable, bcaFeeTable } = getCurrentFeeTables();
           const joinDate = new Date(formData.membership.joinDate);
           const membershipType = formData.membership.type;
 
@@ -744,7 +819,9 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
                 <button onClick={handleAdminLogout} className="text-blue-600 hover:text-blue-800">
                   <ChevronLeft className="w-6 h-6" />
                 </button>
-                <h2 className="text-xl font-bold">Transaction Management</h2>
+                <h2 className="text-xl font-bold">
+                  {showFeeEditor ? 'Fee Management' : 'Transaction Management'}
+                </h2>
               </div>
               <button
                 onClick={handleAdminLogout}
@@ -755,85 +832,215 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
               </button>
             </div>
 
-            <div className="bg-white p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">Export Data</h3>
-              <div className="grid grid-cols-1 gap-3">
-                <button
-                  onClick={exportToCSV}
-                  className="p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
-                >
-                  <FileText className="w-5 h-5" />
-                  <span>Export to CSV (Excel)</span>
-                </button>
-                <button
-                  onClick={exportTransactions}
-                  className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                >
-                  <Download className="w-5 h-5" />
-                  <span>Export to JSON (Backup)</span>
-                </button>
-              </div>
-            </div>
+            {showFeeEditor ? (
+              <FeeEditorScreen />
+            ) : (
+              <>
+                <div className="bg-white p-6 rounded-lg border">
+                  <h3 className="text-lg font-semibold mb-4">System Management</h3>
+                  <div className="grid grid-cols-1 gap-3">
+                    <button
+                      onClick={startEditingFees}
+                      className="p-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
+                    >
+                      <Calculator className="w-5 h-5" />
+                      <span>Manage Membership Fees</span>
+                    </button>
+                    <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                      {customFees ? 'Custom fees are active' : 'Using default fees'}
+                    </div>
+                  </div>
+                </div>
 
-            <div className="bg-white p-6 rounded-lg border">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Recent Transactions ({transactions.length})</h3>
-                {transactions.length > 0 && (
-                  <button
-                    onClick={clearAllData}
-                    className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span>Clear All</span>
-                  </button>
-                )}
-              </div>
+                <div className="bg-white p-6 rounded-lg border">
+                  <h3 className="text-lg font-semibold mb-4">Export Data</h3>
+                  <div className="grid grid-cols-1 gap-3">
+                    <button
+                      onClick={exportToCSV}
+                      className="p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+                    >
+                      <FileText className="w-5 h-5" />
+                      <span>Export to CSV (Excel)</span>
+                    </button>
+                    <button
+                      onClick={exportTransactions}
+                      className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                    >
+                      <Download className="w-5 h-5" />
+                      <span>Export to JSON (Backup)</span>
+                    </button>
+                  </div>
+                </div>
 
-              {transactions.length === 0 ? (
-                <p className="text-gray-500 italic">No transactions recorded yet.</p>
-              ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {transactions.slice(-10).reverse().map((transaction) => (
-                    <div key={transaction.id} className="border rounded-lg p-4 bg-gray-50">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold">{transaction.transactionNumber || transaction.id}</p>
-                          <p className="text-sm text-gray-600">{transaction.names.join(', ')}</p>
-                          <p className="text-sm text-gray-600">{transaction.type.replace('-', ' ')}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold">£{transaction.amount.toFixed(2)}</p>
-                          <p className="text-sm text-gray-600">{transaction.paymentMethod}</p>
-                          <p className={`text-sm px-2 py-1 rounded text-white ${
-                            transaction.status === 'completed' ? 'bg-green-600' :
-                            transaction.status === 'pending' ? 'bg-yellow-600' :
-                            transaction.status === 'failed' ? 'bg-red-600' :
-                            'bg-gray-600'
-                          }`}>
-                            {transaction.status}
+                <div className="bg-white p-6 rounded-lg border">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold">Recent Transactions ({transactions.length})</h3>
+                    {transactions.length > 0 && (
+                      <button
+                        onClick={clearAllData}
+                        className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>Clear All</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {transactions.length === 0 ? (
+                    <p className="text-gray-500 italic">No transactions recorded yet.</p>
+                  ) : (
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                      {transactions.slice(-10).reverse().map((transaction) => (
+                        <div key={transaction.id} className="border rounded-lg p-4 bg-gray-50">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-semibold">{transaction.transactionNumber || transaction.id}</p>
+                              <p className="text-sm text-gray-600">{transaction.names.join(', ')}</p>
+                              <p className="text-sm text-gray-600">{transaction.type.replace('-', ' ')}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold">£{transaction.amount.toFixed(2)}</p>
+                              <p className="text-sm text-gray-600">{transaction.paymentMethod}</p>
+                              <p className={`text-sm px-2 py-1 rounded text-white ${
+                                transaction.status === 'completed' ? 'bg-green-600' :
+                                transaction.status === 'pending' ? 'bg-yellow-600' :
+                                transaction.status === 'failed' ? 'bg-red-600' :
+                                'bg-gray-600'
+                              }`}>
+                                {transaction.status}
+                              </p>
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-2">
+                            {new Date(transaction.date).toLocaleString('en-GB')}
                           </p>
                         </div>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        {new Date(transaction.date).toLocaleString('en-GB')}
-                      </p>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
-            </div>
 
-            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-              <h4 className="font-semibold text-yellow-800 mb-2">Data Storage</h4>
-              <p className="text-sm text-yellow-700">
-                All transaction data is stored locally on this device. Export regularly for backup.
-                Data will persist until manually cleared or browser storage is reset.
-              </p>
-            </div>
+                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                  <h4 className="font-semibold text-yellow-800 mb-2">Data Storage</h4>
+                  <p className="text-sm text-yellow-700">
+                    All transaction data and custom fees are stored locally on this device. Export regularly for backup.
+                    Data will persist until manually cleared or browser storage is reset.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         );
 
-        const DetailsScreen = () => (
+        const FeeEditorScreen = () => (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between mb-6">
+              <button 
+                onClick={() => setShowFeeEditor(false)}
+                className="text-blue-600 hover:text-blue-800 flex items-center space-x-2"
+              >
+                <ChevronLeft className="w-6 h-6" />
+                <span>Back to Admin</span>
+              </button>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => saveFees(editingFees)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Save Changes
+                </button>
+                <button
+                  onClick={resetFeesToDefault}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Reset to Default
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <h4 className="font-semibold text-blue-800 mb-2">Fee Management</h4>
+              <p className="text-sm text-blue-700">
+                Update membership fees for different periods and membership types. Changes are saved locally and will be used for all future calculations.
+              </p>
+            </div>
+
+            {/* MCG Membership Fees */}
+            <div className="bg-white p-6 rounded-lg border">
+              <h3 className="text-lg font-semibold mb-4">MCG Membership Fees</h3>
+              {Object.entries(editingFees?.membershipFees || {}).map(([membershipType, periods]) => (
+                <div key={membershipType} className="mb-6 last:mb-0">
+                  <h4 className="font-medium text-gray-800 mb-3 pb-2 border-b">{membershipType}</h4>
+                  <div className="grid grid-cols-1 gap-3">
+                    {periods.map((period, index) => (
+                      <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded">
+                        <div className="flex-1">
+                          <span className="text-sm text-gray-600">
+                            {new Date(period.start).toLocaleDateString('en-GB')} - {new Date(period.end).toLocaleDateString('en-GB')}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-600">£</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={period.fee}
+                            onChange={(e) => updateFeeAmount('membershipFees', membershipType, index, e.target.value)}
+                            className="w-20 p-2 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* BCA Membership Fees */}
+            <div className="bg-white p-6 rounded-lg border">
+              <h3 className="text-lg font-semibold mb-4">BCA Membership Fees</h3>
+              {Object.entries(editingFees?.bcaFees || {}).map(([membershipType, periods]) => (
+                <div key={membershipType} className="mb-6 last:mb-0">
+                  <h4 className="font-medium text-gray-800 mb-3 pb-2 border-b">{membershipType}</h4>
+                  <div className="grid grid-cols-1 gap-3">
+                    {periods.map((period, index) => (
+                      <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded">
+                        <div className="flex-1">
+                          <span className="text-sm text-gray-600">
+                            {new Date(period.start).toLocaleDateString('en-GB')} - {new Date(period.end).toLocaleDateString('en-GB')}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-600">£</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={period.fee}
+                            onChange={(e) => updateFeeAmount('bcaFees', membershipType, index, e.target.value)}
+                            className="w-20 p-2 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+              <h4 className="font-semibold text-yellow-800 mb-2">Important Notes</h4>
+              <ul className="text-sm text-yellow-700 space-y-1">
+                <li>• Changes take effect immediately after saving</li>
+                <li>• Fees are pro-rated based on join date within the specified periods</li>
+                <li>• All amounts should be in GBP (£)</li>
+                <li>• Use "Reset to Default" to restore original fee structure</li>
+                <li>• Custom fees are stored locally on this device</li>
+              </ul>
+            </div>
+          </div>
+        );
           <div className="space-y-6">
             <div className="flex items-center space-x-3 mb-6">
               <button onClick={() => {
@@ -1124,6 +1331,7 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
 
         const PaymentScreen = () => {
           const membershipBreakdown = paymentType === 'membership' ? (() => {
+            const { feeTable, bcaFeeTable } = getCurrentFeeTables();
             const joinDate = new Date(formData.membership.joinDate);
             const membershipType = formData.membership.type;
 
