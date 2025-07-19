@@ -236,6 +236,116 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
           setPasswordError('');
         };
 
+        const FeeEditorScreen = () => (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between mb-6">
+              <button 
+                onClick={() => setShowFeeEditor(false)}
+                className="text-blue-600 hover:text-blue-800 flex items-center space-x-2"
+              >
+                <ChevronLeft className="w-6 h-6" />
+                <span>Back to Admin</span>
+              </button>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => saveFees(editingFees)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Save Changes
+                </button>
+                <button
+                  onClick={resetFeesToDefault}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Reset to Default
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <h4 className="font-semibold text-blue-800 mb-2">Fee Management</h4>
+              <p className="text-sm text-blue-700">
+                Update membership fees for different periods and membership types. Changes are saved locally and will be used for all future calculations.
+              </p>
+            </div>
+
+            {/* MCG Membership Fees */}
+            <div className="bg-white p-6 rounded-lg border">
+              <h3 className="text-lg font-semibold mb-4">MCG Membership Fees</h3>
+              {Object.entries(editingFees?.membershipFees || {}).map(([membershipType, periods]) => (
+                <div key={membershipType} className="mb-6 last:mb-0">
+                  <h4 className="font-medium text-gray-800 mb-3 pb-2 border-b">{membershipType}</h4>
+                  <div className="grid grid-cols-1 gap-3">
+                    {periods.map((period, index) => (
+                      <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded">
+                        <div className="flex-1">
+                          <span className="text-sm text-gray-600">
+                            {new Date(period.start).toLocaleDateString('en-GB')} - {new Date(period.end).toLocaleDateString('en-GB')}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-600">£</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={period.fee}
+                            onChange={(e) => updateFeeAmount('membershipFees', membershipType, index, e.target.value)}
+                            className="w-20 p-2 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* BCA Membership Fees */}
+            <div className="bg-white p-6 rounded-lg border">
+              <h3 className="text-lg font-semibold mb-4">BCA Membership Fees</h3>
+              {Object.entries(editingFees?.bcaFees || {}).map(([membershipType, periods]) => (
+                <div key={membershipType} className="mb-6 last:mb-0">
+                  <h4 className="font-medium text-gray-800 mb-3 pb-2 border-b">{membershipType}</h4>
+                  <div className="grid grid-cols-1 gap-3">
+                    {periods.map((period, index) => (
+                      <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded">
+                        <div className="flex-1">
+                          <span className="text-sm text-gray-600">
+                            {new Date(period.start).toLocaleDateString('en-GB')} - {new Date(period.end).toLocaleDateString('en-GB')}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-600">£</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={period.fee}
+                            onChange={(e) => updateFeeAmount('bcaFees', membershipType, index, e.target.value)}
+                            className="w-20 p-2 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+              <h4 className="font-semibold text-yellow-800 mb-2">Important Notes</h4>
+              <ul className="text-sm text-yellow-700 space-y-1">
+                <li>• Changes take effect immediately after saving</li>
+                <li>• Fees are pro-rated based on join date within the specified periods</li>
+                <li>• All amounts should be in GBP (£)</li>
+                <li>• Use "Reset to Default" to restore original fee structure</li>
+                <li>• Custom fees are stored locally on this device</li>
+              </ul>
+            </div>
+          </div>
+        );
+
         const handlePasswordSubmit = (e) => {
           e.preventDefault();
           if (passwordInput === ADMIN_PASSWORD) {
