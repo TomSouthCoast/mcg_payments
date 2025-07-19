@@ -1,4 +1,4 @@
-name: Azure Static Web Apps CI/CD
+`name: Azure Static Web Apps CI/CD
 on:
   push:
     branches:
@@ -27,7 +27,8 @@ jobs:
           ###### Repository/Build Configurations ######
           app_location: "/"
           api_location: "api"
-          output_location: ""
+          output_location: "/"
+          skip_app_build: true
           ###### End of Repository/Build Configurations ######
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
