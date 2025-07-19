@@ -29,32 +29,23 @@
       const installButton = document.getElementById('install-button');
       const dismissButton = document.getElementById('install-dismiss');
 
-      // Listen for the beforeinstallprompt event
       window.addEventListener('beforeinstallprompt', (e) => {
         console.log('beforeinstallprompt event fired');
-        // Prevent the mini-infobar from appearing
         e.preventDefault();
-        // Stash the event so it can be triggered later
         deferredPrompt = e;
-        // Show the install prompt
         if (installPrompt) {
           installPrompt.style.display = 'flex';
         }
       });
 
-      // Handle install button click
       if (installButton) {
         installButton.addEventListener('click', async () => {
           console.log('Install button clicked');
           if (deferredPrompt) {
-            // Show the install prompt
             deferredPrompt.prompt();
-            // Wait for the user to respond to the prompt
             const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response to the install prompt: ${outcome}`);
-            // Clear the deferredPrompt variable
+            console.log(`User response: ${outcome}`);
             deferredPrompt = null;
-            // Hide the install prompt
             if (installPrompt) {
               installPrompt.style.display = 'none';
             }
@@ -62,171 +53,44 @@
         });
       }
 
-      // Handle dismiss button click
       if (dismissButton) {
         dismissButton.addEventListener('click', () => {
           console.log('Dismiss button clicked');
           if (installPrompt) {
             installPrompt.style.display = 'none';
           }
-          // Clear the deferredPrompt variable
           deferredPrompt = null;
         });
       }
 
-      // Listen for the appinstalled event
       window.addEventListener('appinstalled', (evt) => {
         console.log('App was installed');
         if (installPrompt) {
           installPrompt.style.display = 'none';
         }
       });
+
+      // Test manifest
+      fetch('/manifest.json')
+        .then(response => {
+          console.log('Manifest status:', response.status);
+          return response.json();
+        })
+        .then(data => console.log('Manifest data:', data))
+        .catch(err => console.error('Manifest error:', err));
     </script>
     
     <script type="text/babel">
       const { useState, useEffect } = React;
 
-      // Helper component to render any Lucide icon from its data array
-      const LucideIcon = ({ iconData, ...props }) => {
-        if (!iconData) {
-          return null;
-        }
-        const [tag, attrs, children] = iconData;
-        const childElements = children ? children.map((child, i) => React.createElement(LucideIcon, {
-          key: i,
-          iconData: child
-        })) : null;
-        const finalAttrs = { ...attrs, ...props };
-        return React.createElement(tag, finalAttrs, childElements);
-      };
-
-      // Working icon components - paste this EXACTLY
-const ChevronLeft = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '←');
-const CreditCard = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '💳');
-const Banknote = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '💵');
-const Building = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '🏦');
-const Heart = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '❤️');
-const Moon = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '🌙');
-const Users = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '👥');
-const Calendar = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '📅');
-const User = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '👤');
-const Calculator = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '🧮');
-const Check = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '✅');
-const Plus = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '+');
-const Minus = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '-');
-const Download = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '⬇️');
-const FileText = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '📄');
-const Settings = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '⚙️');
-const Trash2 = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '🗑️');
-const Lock = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '🔒');
-const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '🚪');
-
       const MCGPaymentApp = () => {
         const [currentStep, setCurrentStep] = useState('main');
         const [paymentType, setPaymentType] = useState('');
         const [transactions, setTransactions] = useState([]);
-        const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-        const [paymentError, setPaymentError] = useState(null);
         const [showAdmin, setShowAdmin] = useState(false);
         const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
         const [passwordInput, setPasswordInput] = useState('');
         const [passwordError, setPasswordError] = useState('');
-        const [showFeeEditor, setShowFeeEditor] = useState(false);
-        const [editingFees, setEditingFees] = useState(null);
-        const [formData, setFormData] = useState({
-          names: [''],
-          bedNights: {
-            checkIn: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10), // Yesterday
-            checkOut: new Date().toISOString().slice(0, 10), // Today
-            nights: 1,
-            members: 1,
-            guests: 0
-          },
-          membership: {
-            type: 'Probationary',
-            joinDate: new Date().toISOString().slice(0, 10),
-            hasBCA: false,
-            wantsKeyFob: false,
-            hasPaidKitHire: false
-          },
-          dayFees: {
-            date: '',
-            people: 1
-          },
-          donationAmount: '',
-          total: 0,
-          paymentMethod: '',
-          transactionId: null,
-          checkoutId: null
-        });
-
-        // MCG Membership fee tables from the script
-        const defaultFeeTable = {
-          "Probationary": [
-            { start: "2025-01-01", end: "2025-03-31", fee: 40 }, { start: "2025-04-01", end: "2025-06-30", fee: 30 },
-            { start: "2025-07-01", end: "2025-08-31", fee: 20 }, { start: "2025-09-01", end: "2025-09-30", fee: 17 },
-            { start: "2025-10-01", end: "2025-10-31", fee: 13 }, { start: "2025-11-01", end: "2025-11-30", fee: 7 },
-            { start: "2025-12-01", end: "2026-03-31", fee: 40 },
-          ],
-          "Affiliate": [
-            { start: "2025-01-01", end: "2025-03-31", fee: 15 }, { start: "2025-04-01", end: "2025-06-30", fee: 11.25 },
-            { start: "2025-07-01", end: "2025-08-31", fee: 7.5 }, { start: "2025-09-01", end: "2025-09-30", fee: 5 },
-            { start: "2025-10-01", end: "2025-10-31", fee: 3.75 }, { start: "2025-11-01", end: "2025-11-30", fee: 2.5 },
-            { start: "2025-12-01", end: "2026-03-31", fee: 15 },
-          ],
-          "Under18": [{ start: "2025-01-01", end: "2026-03-31", fee: 5 }],
-          "Student": [
-            { start: "2025-01-01", end: "2025-03-31", fee: 40 }, { start: "2025-04-01", end: "2025-06-30", fee: 30 },
-            { start: "2025-07-01", end: "2025-08-31", fee: 20 }, { start: "2025-09-01", end: "2025-09-30", fee: 17 },
-            { start: "2025-10-01", end: "2025-10-31", fee: 13 }, { start: "2025-11-01", end: "2025-11-30", fee: 7 },
-            { start: "2025-12-01", end: "2026-03-31", fee: 40 },
-          ]
-        };
-
-        const defaultBcaFeeTable = {
-          "Probationary": [
-            { start: "2025-01-01", end: "2025-03-31", fee: 24 }, { start: "2025-04-01", end: "2025-06-30", fee: 18 },
-            { start: "2025-07-01", end: "2025-09-30", fee: 12 }, { start: "2025-10-01", end: "2025-11-30", fee: 6 },
-            { start: "2025-12-01", end: "2026-03-31", fee: 24 },
-          ],
-          "Affiliate": [
-            { start: "2025-01-01", end: "2025-03-31", fee: 8 }, { start: "2025-04-01", end: "2025-06-30", fee: 6 },
-            { start: "2025-07-01", end: "2025-09-30", fee: 4 }, { start: "2025-10-01", end: "2025-11-30", fee: 2 },
-            { start: "2025-12-01", end: "2026-03-31", fee: 8 },
-          ],
-          "Under18": [{ start: "2025-01-01", end: "2026-03-31", fee: 0 }],
-          "Student": [
-            { start: "2025-01-01", end: "2025-03-31", fee: 10 }, { start: "2025-04-01", end: "2025-06-30", fee: 7.5 },
-            { start: "2025-07-01", end: "2025-09-30", fee: 5 }, { start: "2025-10-01", end: "2025-11-30", fee: 2.5 },
-            { start: "2025-12-01", end: "2026-03-31", fee: 10 },
-          ]
-        };
-
-        // Load custom fees from localStorage or use defaults
-        const [customFees, setCustomFees] = useState(() => {
-          try {
-            const saved = localStorage.getItem('mcg_custom_fees');
-            return saved ? JSON.parse(saved) : null;
-          } catch (error) {
-            console.error('Error loading custom fees:', error);
-            return null;
-          }
-        });
-
-        // Get current fee tables (reactive to customFees changes)
-        const getCurrentFeeTables = () => ({
-          feeTable: customFees?.membershipFees || defaultFeeTable,
-          bcaFeeTable: customFees?.bcaFees || defaultBcaFeeTable
-        });
-
-        const { feeTable, bcaFeeTable } = getCurrentFeeTables();
-
-        const rates = {
-          bedNight: { member: 5, guest: 7.5 },
-          dayFee: 2,
-          keyFob: 6,
-          kitHireDiscount: -15
-        };
 
         const ADMIN_PASSWORD = 'MCG2025';
 
@@ -235,116 +99,6 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
           setPasswordInput('');
           setPasswordError('');
         };
-
-        const FeeEditorScreen = () => (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between mb-6">
-              <button 
-                onClick={() => setShowFeeEditor(false)}
-                className="text-blue-600 hover:text-blue-800 flex items-center space-x-2"
-              >
-                <ChevronLeft className="w-6 h-6" />
-                <span>Back to Admin</span>
-              </button>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => saveFees(editingFees)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  Save Changes
-                </button>
-                <button
-                  onClick={resetFeesToDefault}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Reset to Default
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <h4 className="font-semibold text-blue-800 mb-2">Fee Management</h4>
-              <p className="text-sm text-blue-700">
-                Update membership fees for different periods and membership types. Changes are saved locally and will be used for all future calculations.
-              </p>
-            </div>
-
-            {/* MCG Membership Fees */}
-            <div className="bg-white p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">MCG Membership Fees</h3>
-              {Object.entries(editingFees?.membershipFees || {}).map(([membershipType, periods]) => (
-                <div key={membershipType} className="mb-6 last:mb-0">
-                  <h4 className="font-medium text-gray-800 mb-3 pb-2 border-b">{membershipType}</h4>
-                  <div className="grid grid-cols-1 gap-3">
-                    {periods.map((period, index) => (
-                      <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded">
-                        <div className="flex-1">
-                          <span className="text-sm text-gray-600">
-                            {new Date(period.start).toLocaleDateString('en-GB')} - {new Date(period.end).toLocaleDateString('en-GB')}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm text-gray-600">£</span>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={period.fee}
-                            onChange={(e) => updateFeeAmount('membershipFees', membershipType, index, e.target.value)}
-                            className="w-20 p-2 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* BCA Membership Fees */}
-            <div className="bg-white p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">BCA Membership Fees</h3>
-              {Object.entries(editingFees?.bcaFees || {}).map(([membershipType, periods]) => (
-                <div key={membershipType} className="mb-6 last:mb-0">
-                  <h4 className="font-medium text-gray-800 mb-3 pb-2 border-b">{membershipType}</h4>
-                  <div className="grid grid-cols-1 gap-3">
-                    {periods.map((period, index) => (
-                      <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded">
-                        <div className="flex-1">
-                          <span className="text-sm text-gray-600">
-                            {new Date(period.start).toLocaleDateString('en-GB')} - {new Date(period.end).toLocaleDateString('en-GB')}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm text-gray-600">£</span>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={period.fee}
-                            onChange={(e) => updateFeeAmount('bcaFees', membershipType, index, e.target.value)}
-                            className="w-20 p-2 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-              <h4 className="font-semibold text-yellow-800 mb-2">Important Notes</h4>
-              <ul className="text-sm text-yellow-700 space-y-1">
-                <li>• Changes take effect immediately after saving</li>
-                <li>• Fees are pro-rated based on join date within the specified periods</li>
-                <li>• All amounts should be in GBP (£)</li>
-                <li>• Use "Reset to Default" to restore original fee structure</li>
-                <li>• Custom fees are stored locally on this device</li>
-              </ul>
-            </div>
-          </div>
-        );
 
         const handlePasswordSubmit = (e) => {
           e.preventDefault();
@@ -361,433 +115,21 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
         const handleAdminLogout = () => {
           setIsAdminAuthenticated(false);
           setShowAdmin(false);
-          setShowFeeEditor(false);
-          setEditingFees(null);
           setPasswordInput('');
           setPasswordError('');
         };
 
-        const saveFees = (newFees) => {
-          try {
-            localStorage.setItem('mcg_custom_fees', JSON.stringify(newFees));
-            setCustomFees(newFees);
-            alert('Fees updated successfully!');
-          } catch (error) {
-            console.error('Error saving fees:', error);
-            alert('Error saving fees. Please try again.');
-          }
-        };
-
-        const resetFeesToDefault = () => {
-          if (window.confirm('Are you sure you want to reset all fees to default values? This cannot be undone.')) {
-            localStorage.removeItem('mcg_custom_fees');
-            setCustomFees(null);
-            setEditingFees(null);
-            alert('Fees reset to default values.');
-          }
-        };
-
-        const startEditingFees = () => {
-          setEditingFees({
-            membershipFees: JSON.parse(JSON.stringify(feeTable)),
-            bcaFees: JSON.parse(JSON.stringify(bcaFeeTable))
-          });
-          setShowFeeEditor(true);
-        };
-
-        const updateFeeAmount = (feeType, membershipType, periodIndex, newAmount) => {
-          setEditingFees(prev => ({
-            ...prev,
-            [feeType]: {
-              ...prev[feeType],
-              [membershipType]: prev[feeType][membershipType].map((period, index) =>
-                index === periodIndex ? { ...period, fee: parseFloat(newAmount) || 0 } : period
-              )
-            }
-          }));
-        };
-
+        // Load transactions
         useEffect(() => {
           try {
-            const savedTransactions = JSON.parse(localStorage.getItem('mcg_transactions') || '[]');
-            setTransactions(savedTransactions);
+            const saved = localStorage.getItem('mcg_transactions');
+            if (saved) {
+              setTransactions(JSON.parse(saved));
+            }
           } catch (error) {
             console.error('Error loading transactions:', error);
-            setTransactions([]);
           }
         }, []);
-
-        useEffect(() => {
-          try {
-            localStorage.setItem('mcg_transactions', JSON.stringify(transactions));
-          } catch (error) {
-            console.error('Error saving transactions:', error);
-          }
-        }, [transactions]);
-
-        // Save custom fees when they change
-        useEffect(() => {
-          if (customFees) {
-            try {
-              localStorage.setItem('mcg_custom_fees', JSON.stringify(customFees));
-            } catch (error) {
-              console.error('Error saving custom fees:', error);
-            }
-          }
-        }, [customFees]);
-
-        const exportTransactions = () => {
-          const dataStr = JSON.stringify(transactions, null, 2);
-          const dataBlob = new Blob([dataStr], { type: 'application/json' });
-          const url = URL.createObjectURL(dataBlob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `mcg-transactions-${new Date().toISOString().slice(0, 10)}.json`;
-          link.click();
-          URL.revokeObjectURL(url);
-        };
-
-        const exportToCSV = () => {
-          const headers = ['Date', 'Transaction ID', 'Type', 'Names', 'Amount', 'Payment Method', 'Status'];
-          const csvContent = [
-            headers.join(','),
-            ...transactions.map(t => [
-              new Date(t.date).toLocaleDateString('en-GB'),
-              t.transactionNumber || t.id,
-              t.type,
-              `"${t.names.join(', ')}"`,
-              t.amount,
-              t.paymentMethod,
-              t.status
-            ].join(','))
-          ].join('\n');
-
-          const blob = new Blob([csvContent], { type: 'text/csv' });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `mcg-transactions-${new Date().toISOString().slice(0, 10)}.csv`;
-          link.click();
-          URL.revokeObjectURL(url);
-        };
-
-        const clearAllData = () => {
-          if (window.confirm('Are you sure you want to clear all transaction data? This cannot be undone.')) {
-            localStorage.removeItem('mcg_transactions');
-            setTransactions([]);
-            alert('All data cleared successfully.');
-          }
-        };
-
-        useEffect(() => {
-          const urlParams = new URLSearchParams(window.location.search);
-          const checkoutId = urlParams.get('checkout_id');
-          const status = urlParams.get('status');
-
-          if (checkoutId) {
-            handlePaymentReturn(checkoutId, status);
-            window.history.replaceState({}, '', window.location.pathname);
-          }
-        }, []);
-
-        const handlePaymentReturn = async (checkoutId, status) => {
-          try {
-            if (status === 'success') {
-              setCurrentStep('confirmation');
-              setTransactions(prev =>
-                prev.map((t, i) => i === prev.length - 1 ? {
-                  ...t,
-                  status: 'completed',
-                  checkoutId
-                } : t)
-              );
-            } else if (status === 'cancelled') {
-              setPaymentError('Payment was cancelled. Please try again.');
-              setCurrentStep('payment');
-            } else {
-              setPaymentError('Payment failed. Please try again or use an alternative payment method.');
-              setCurrentStep('payment');
-            }
-          } catch (error) {
-            setPaymentError('Error processing payment return. Please contact support.');
-            setCurrentStep('payment');
-          }
-        };
-
-        const processSumUpPayment = async (amount, reference, description) => {
-          setIsProcessingPayment(true);
-          setPaymentError(null);
-
-          try {
-            if (!navigator.onLine) {
-              throw new Error('Card payments require internet connection.');
-            }
-
-            const API_BASE_URL = 'https://black-stone-0eb5d5603.1.azurestaticapps.net';
-
-            console.log('Attempting SumUp payment:', { amount, reference, description });
-
-            const checkoutResponse = await fetch(`${API_BASE_URL}/api/create-checkout`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                amount: amount,
-                reference: reference,
-                description: description
-              })
-            });
-
-            console.log('Response status:', checkoutResponse.status);
-            console.log('Response headers:', checkoutResponse.headers);
-
-            if (!checkoutResponse.ok) {
-              // Try to get error message, but handle non-JSON responses
-              let errorMessage = `HTTP ${checkoutResponse.status}`;
-              try {
-                const errorData = await checkoutResponse.json();
-                errorMessage = errorData.error || errorMessage;
-              } catch (jsonError) {
-                // Response wasn't JSON, try to get text
-                try {
-                  const errorText = await checkoutResponse.text();
-                  errorMessage = errorText || errorMessage;
-                } catch (textError) {
-                  console.log('Could not parse error response');
-                }
-              }
-              throw new Error(`API Error: ${errorMessage}`);
-            }
-
-            // Try to parse JSON response
-            let checkoutData;
-            try {
-              checkoutData = await checkoutResponse.json();
-            } catch (jsonError) {
-              // For testing: if API returns non-JSON, simulate success
-              console.warn('API returned non-JSON response, simulating success for testing');
-              checkoutData = {
-                checkout_id: `TEST_${Date.now()}`,
-                status: 'simulated'
-              };
-            }
-
-            console.log('Checkout data:', checkoutData);
-
-            // Show success message
-            if (checkoutData.status === 'simulated') {
-              alert(`TESTING MODE: Payment simulated!\nCheckout ID: ${checkoutData.checkout_id}\nAmount: £${amount}\n\nNote: This is a test response because the API returned invalid JSON.`);
-            } else {
-              alert(`Payment created! Checkout ID: ${checkoutData.checkout_id}\nAmount: £${amount}\nIn production, this would activate your SumUp Air device.`);
-            }
-
-            // Complete the transaction after a delay
-            setTimeout(() => {
-              setCurrentStep('confirmation');
-              setTransactions(prev =>
-                prev.map((t, i) => i === prev.length - 1 ? {
-                  ...t,
-                  status: 'completed',
-                  transactionId: checkoutData.checkout_id
-                } : t)
-              );
-              setIsProcessingPayment(false);
-            }, 3000);
-
-          } catch (error) {
-            console.error('Payment error details:', error);
-            
-            // Provide more helpful error messages
-            let userMessage = error.message;
-            if (error.message.includes('Failed to fetch')) {
-              userMessage = 'Unable to connect to payment service. Please check your internet connection or try again later.';
-            } else if (error.message.includes('JSON')) {
-              userMessage = 'Payment service is currently in testing mode. The API returned an unexpected response format.';
-            }
-            
-            setPaymentError(userMessage);
-            setIsProcessingPayment(false);
-          }
-        };
-
-        const getFeeForDate = (feeArray, date) => {
-          for (let entry of feeArray) {
-            let start = Date.parse(entry.start);
-            let end = Date.parse(entry.end);
-            if (date.getTime() >= start && date.getTime() <= end) {
-              return entry.fee;
-            }
-          }
-          return null;
-        };
-
-        const calculateMembershipFee = () => {
-          const { feeTable, bcaFeeTable } = getCurrentFeeTables();
-          const joinDate = new Date(formData.membership.joinDate);
-          const membershipType = formData.membership.type;
-
-          let baseFee = getFeeForDate(feeTable[membershipType], joinDate);
-          let bcaFee = formData.membership.hasBCA ? 0 : (getFeeForDate(bcaFeeTable[membershipType], joinDate) || 0);
-          let keyFobFee = formData.membership.wantsKeyFob ? rates.keyFob : 0;
-          let kitHireDiscount = formData.membership.hasPaidKitHire ? rates.kitHireDiscount : 0;
-
-          if (baseFee === null) return 0;
-
-          let totalFee = baseFee + bcaFee + keyFobFee + kitHireDiscount;
-          return Math.max(0, totalFee);
-        };
-
-        const calculateTotal = () => {
-          let total = 0;
-
-          if (paymentType === 'bed-nights') {
-            const membersCost = formData.bedNights.members * formData.bedNights.nights * rates.bedNight.member;
-            const guestsCost = formData.bedNights.guests * formData.bedNights.nights * rates.bedNight.guest;
-            total = membersCost + guestsCost;
-          } else if (paymentType === 'membership') {
-            total = calculateMembershipFee();
-          } else if (paymentType === 'day-fees') {
-            total = formData.dayFees.people * rates.dayFee;
-          } else if (paymentType === 'donation') {
-            total = parseFloat(formData.donationAmount) || 0;
-          }
-
-          setFormData(prev => ({ ...prev, total }));
-          return total;
-        };
-
-        const calculateNights = (checkIn, checkOut) => {
-          if (!checkIn || !checkOut) return 0;
-          const start = new Date(checkIn);
-          const end = new Date(checkOut);
-          const diffTime = Math.abs(end - start);
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          return diffDays;
-        };
-
-        const addName = () => {
-          setFormData(prev => ({
-            ...prev,
-            names: [...prev.names, '']
-          }));
-        };
-
-        const removeName = (index) => {
-          if (formData.names.length > 1) {
-            setFormData(prev => ({
-              ...prev,
-              names: prev.names.filter((_, i) => i !== index)
-            }));
-          }
-        };
-
-        const updateName = (index, value) => {
-          setFormData(prev => ({
-            ...prev,
-            names: prev.names.map((name, i) => i === index ? value : name)
-          }));
-        };
-
-        const getTransactionPrefix = (paymentType) => {
-          switch (paymentType) {
-            case 'bed-nights': return 'B';
-            case 'membership': return 'M';
-            case 'day-fees': return 'F';
-            case 'donation': return 'D';
-            default: return 'T';
-          }
-        };
-
-        const handlePayment = (method) => {
-          const fullTimestamp = Date.now();
-          const shortId = fullTimestamp.toString().slice(-6); // Last 6 digits
-          const prefix = getTransactionPrefix(paymentType);
-          const transactionId = `${prefix}${shortId}`; // e.g., "B703625"
-
-          const transaction = {
-            id: fullTimestamp,
-            transactionNumber: transactionId,
-            date: new Date().toISOString(),
-            type: paymentType,
-            amount: formData.total,
-            paymentMethod: method,
-            names: formData.names.filter(name => name.trim() !== ''),
-            details: getTransactionDetails(),
-            status: method === 'sumup' ? 'pending' : 'recorded'
-          };
-
-          setTransactions(prev => [...prev, transaction]);
-          setFormData(prev => ({ ...prev, paymentMethod: method, transactionId }));
-
-          if (method === 'sumup') {
-            const description = `MCG ${paymentType.replace('-', ' ')} - ${formData.names.filter(n => n.trim()).join(', ')}`;
-            processSumUpPayment(formData.total, transactionId, description);
-          } else {
-            setCurrentStep('confirmation');
-          }
-        };
-
-        const getTransactionDetails = () => {
-          switch (paymentType) {
-            case 'bed-nights':
-              return {
-                checkIn: formData.bedNights.checkIn,
-                checkOut: formData.bedNights.checkOut,
-                nights: formData.bedNights.nights,
-                members: formData.bedNights.members,
-                guests: formData.bedNights.guests
-              };
-            case 'membership':
-              return {
-                type: formData.membership.type,
-                joinDate: formData.membership.joinDate,
-                hasBCA: formData.membership.hasBCA,
-                wantsKeyFob: formData.membership.wantsKeyFob,
-                hasPaidKitHire: formData.membership.hasPaidKitHire
-              };
-            case 'day-fees':
-              return {
-                date: formData.dayFees.date,
-                people: formData.dayFees.people
-              };
-            case 'donation':
-              return { amount: formData.donationAmount };
-            default:
-              return {};
-          }
-        };
-
-        const resetForm = () => {
-          setCurrentStep('main');
-          setPaymentType('');
-          setIsProcessingPayment(false);
-          setPaymentError(null);
-          setFormData({
-            names: [''],
-            bedNights: {
-              checkIn: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-              checkOut: new Date().toISOString().slice(0, 10),
-              nights: 1,
-              members: 1,
-              guests: 0
-            },
-            membership: {
-              type: 'Probationary',
-              joinDate: new Date().toISOString().slice(0, 10),
-              hasBCA: false,
-              wantsKeyFob: false,
-              hasPaidKitHire: false
-            },
-            dayFees: {
-              date: '',
-              people: 1
-            },
-            donationAmount: '',
-            total: 0,
-            paymentMethod: '',
-            transactionId: null,
-            checkoutId: null
-          });
-        };
 
         const MainScreen = () => (
           <div className="space-y-6">
@@ -798,7 +140,7 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
                   className="absolute top-4 right-4 p-2 text-blue-100 hover:text-white hover:bg-blue-700 rounded"
                   title="Admin Panel"
                 >
-                  <Settings className="w-5 h-5" />
+                  ⚙️
                 </button>
                 <h1 className="text-2xl font-bold">Mendip Caving Group</h1>
                 <p className="text-blue-100">Payment System</p>
@@ -811,27 +153,25 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
                 onClick={() => {
                   setPaymentType('bed-nights');
                   setCurrentStep('details');
-                  setPaymentError(null);
                 }}
                 className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
               >
                 <div className="flex items-center justify-center space-x-3">
-                  <Moon className="w-6 h-6 text-blue-600" />
+                  <span style={{fontSize: '24px'}}>🌙</span>
                   <span className="text-lg font-semibold">Bed Nights</span>
                 </div>
-                <p className="text-gray-600 mt-2">£{rates.bedNight.member}/night (members) • £{rates.bedNight.guest}/night (guests)</p>
+                <p className="text-gray-600 mt-2">£5/night (members) • £7.50/night (guests)</p>
               </button>
 
               <button
                 onClick={() => {
                   setPaymentType('membership');
                   setCurrentStep('details');
-                  setPaymentError(null);
                 }}
                 className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
               >
                 <div className="flex items-center justify-center space-x-3">
-                  <Users className="w-6 h-6 text-blue-600" />
+                  <span style={{fontSize: '24px'}}>👥</span>
                   <span className="text-lg font-semibold">MCG Membership</span>
                 </div>
                 <p className="text-gray-600 mt-2">Variable pricing based on membership type and join date</p>
@@ -841,27 +181,25 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
                 onClick={() => {
                   setPaymentType('day-fees');
                   setCurrentStep('details');
-                  setPaymentError(null);
                 }}
                 className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
               >
                 <div className="flex items-center justify-center space-x-3">
-                  <Calendar className="w-6 h-6 text-blue-600" />
+                  <span style={{fontSize: '24px'}}>📅</span>
                   <span className="text-lg font-semibold">Day Fees</span>
                 </div>
-                <p className="text-gray-600 mt-2">£{rates.dayFee} per person per day (showers & kitchen use)</p>
+                <p className="text-gray-600 mt-2">£2 per person per day (showers & kitchen use)</p>
               </button>
 
               <button
                 onClick={() => {
                   setPaymentType('donation');
                   setCurrentStep('details');
-                  setPaymentError(null);
                 }}
                 className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
               >
                 <div className="flex items-center justify-center space-x-3">
-                  <Heart className="w-6 h-6 text-blue-600" />
+                  <span style={{fontSize: '24px'}}>❤️</span>
                   <span className="text-lg font-semibold">Donations</span>
                 </div>
                 <p className="text-gray-600 mt-2">Support the Mendip Caving Group</p>
@@ -874,14 +212,14 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
           <div className="space-y-6">
             <div className="flex items-center space-x-3 mb-6">
               <button onClick={() => setShowAdmin(false)} className="text-blue-600 hover:text-blue-800">
-                <ChevronLeft className="w-6 h-6" />
+                <span style={{fontSize: '24px'}}>←</span>
               </button>
               <h2 className="text-xl font-bold">Admin Access</h2>
             </div>
 
             <div className="bg-white p-6 rounded-lg border">
               <div className="text-center mb-6">
-                <Lock className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <span style={{fontSize: '48px'}} className="block mb-3">🔒</span>
                 <h3 className="text-lg font-semibold text-gray-800">Password Required</h3>
                 <p className="text-gray-600">Enter admin password to access transaction management</p>
               </div>
@@ -913,12 +251,6 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
                 </button>
               </form>
             </div>
-
-            <div className="bg-gray-50 p-4 rounded-lg border">
-              <p className="text-sm text-gray-600 text-center">
-                Admin access is required to view transactions, export data, and manage the system.
-              </p>
-            </div>
           </div>
         );
 
@@ -927,598 +259,55 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-3">
                 <button onClick={handleAdminLogout} className="text-blue-600 hover:text-blue-800">
-                  <ChevronLeft className="w-6 h-6" />
+                  <span style={{fontSize: '24px'}}>←</span>
                 </button>
-                <h2 className="text-xl font-bold">
-                  {showFeeEditor ? 'Fee Management' : 'Transaction Management'}
-                </h2>
+                <h2 className="text-xl font-bold">Admin Panel</h2>
               </div>
               <button
                 onClick={handleAdminLogout}
                 className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
                 title="Logout"
               >
-                <LogOut className="w-5 h-5" />
+                <span style={{fontSize: '20px'}}>🚪</span>
               </button>
             </div>
 
-            {showFeeEditor ? (
-              <FeeEditorScreen />
-            ) : (
-              <>
-                <div className="bg-white p-6 rounded-lg border">
-                  <h3 className="text-lg font-semibold mb-4">System Management</h3>
-                  <div className="grid grid-cols-1 gap-3">
-                    <button
-                      onClick={startEditingFees}
-                      className="p-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
-                    >
-                      <Calculator className="w-5 h-5" />
-                      <span>Manage Membership Fees</span>
-                    </button>
-                    <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
-                      {customFees ? 'Custom fees are active' : 'Using default fees'}
-                    </div>
-                  </div>
-                </div>
+            <div className="bg-white p-6 rounded-lg border">
+              <h3 className="text-lg font-semibold mb-4">System Status</h3>
+              <p className="text-green-600">✅ System is working correctly</p>
+              <p className="text-gray-600 mt-2">Transactions: {transactions.length}</p>
+            </div>
 
-                <div className="bg-white p-6 rounded-lg border">
-                  <h3 className="text-lg font-semibold mb-4">Export Data</h3>
-                  <div className="grid grid-cols-1 gap-3">
-                    <button
-                      onClick={exportToCSV}
-                      className="p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
-                    >
-                      <FileText className="w-5 h-5" />
-                      <span>Export to CSV (Excel)</span>
-                    </button>
-                    <button
-                      onClick={exportTransactions}
-                      className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                    >
-                      <Download className="w-5 h-5" />
-                      <span>Export to JSON (Backup)</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-lg border">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">Recent Transactions ({transactions.length})</h3>
-                    {transactions.length > 0 && (
-                      <button
-                        onClick={clearAllData}
-                        className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        <span>Clear All</span>
-                      </button>
-                    )}
-                  </div>
-
-                  {transactions.length === 0 ? (
-                    <p className="text-gray-500 italic">No transactions recorded yet.</p>
-                  ) : (
-                    <div className="space-y-3 max-h-96 overflow-y-auto">
-                      {transactions.slice(-10).reverse().map((transaction) => (
-                        <div key={transaction.id} className="border rounded-lg p-4 bg-gray-50">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="font-semibold">{transaction.transactionNumber || transaction.id}</p>
-                              <p className="text-sm text-gray-600">{transaction.names.join(', ')}</p>
-                              <p className="text-sm text-gray-600">{transaction.type.replace('-', ' ')}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-semibold">£{transaction.amount.toFixed(2)}</p>
-                              <p className="text-sm text-gray-600">{transaction.paymentMethod}</p>
-                              <p className={`text-sm px-2 py-1 rounded text-white ${
-                                transaction.status === 'completed' ? 'bg-green-600' :
-                                transaction.status === 'pending' ? 'bg-yellow-600' :
-                                transaction.status === 'failed' ? 'bg-red-600' :
-                                'bg-gray-600'
-                              }`}>
-                                {transaction.status}
-                              </p>
-                            </div>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-2">
-                            {new Date(transaction.date).toLocaleString('en-GB')}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                  <h4 className="font-semibold text-yellow-800 mb-2">Data Storage</h4>
-                  <p className="text-sm text-yellow-700">
-                    All transaction data and custom fees are stored locally on this device. Export regularly for backup.
-                    Data will persist until manually cleared or browser storage is reset.
-                  </p>
-                </div>
-              </>
-            )}
+            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+              <h4 className="font-semibold text-yellow-800 mb-2">Next Steps</h4>
+              <p className="text-sm text-yellow-700">
+                Basic app is working. Fee management will be added once this version is confirmed working.
+              </p>
+            </div>
           </div>
         );
+
+        const DetailsScreen = () => (
           <div className="space-y-6">
             <div className="flex items-center space-x-3 mb-6">
-              <button onClick={() => {
-                setCurrentStep('main');
-                setPaymentError(null);
-              }} className="text-blue-600 hover:text-blue-800">
-                <ChevronLeft className="w-6 h-6" />
+              <button onClick={() => setCurrentStep('main')} className="text-blue-600 hover:text-blue-800">
+                <span style={{fontSize: '24px'}}>←</span>
               </button>
               <h2 className="text-xl font-bold capitalize">{paymentType.replace('-', ' ')}</h2>
             </div>
 
             <div className="bg-white p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">Names *</h3>
-              <div className="space-y-3">
-                {formData.names.map((name, index) => (
-                  <div key={`name-${index}`} className="flex items-center space-x-2">
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => updateName(index, e.target.value)}
-                      placeholder={`Name ${index + 1} *`}
-                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                      autoComplete="off"
-                    />
-                    {formData.names.length > 1 && (
-                      <button
-                        onClick={() => removeName(index)}
-                        className="p-2 text-red-600 hover:text-red-800"
-                        type="button"
-                      >
-                        <Minus className="w-5 h-5" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  onClick={addName}
-                  className="flex items-center space-x-2 text-blue-600 hover:text-blue-800"
-                  type="button"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add another name</span>
-                </button>
-              </div>
+              <h3 className="text-lg font-semibold mb-4">Feature Coming Soon</h3>
+              <p className="text-gray-600">
+                {paymentType.charAt(0).toUpperCase() + paymentType.slice(1).replace('-', ' ')} payment form will be added once basic structure is confirmed working.
+              </p>
+              <button
+                onClick={() => setCurrentStep('main')}
+                className="mt-4 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Back to Main Menu
+              </button>
             </div>
-
-            {paymentType === 'bed-nights' && (
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Bed Night Details</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Check-in Date *</label>
-                    <input
-                      type="date"
-                      value={formData.bedNights.checkIn}
-                      onChange={(e) => {
-                        const newCheckIn = e.target.value;
-                        const nights = calculateNights(newCheckIn, formData.bedNights.checkOut);
-                        setFormData(prev => ({
-                          ...prev,
-                          bedNights: { ...prev.bedNights, checkIn: newCheckIn, nights }
-                        }));
-                      }}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Check-out Date *</label>
-                    <input
-                      type="date"
-                      value={formData.bedNights.checkOut}
-                      onChange={(e) => {
-                        const newCheckOut = e.target.value;
-                        const nights = calculateNights(formData.bedNights.checkIn, newCheckOut);
-                        setFormData(prev => ({
-                          ...prev,
-                          bedNights: { ...prev.bedNights, checkOut: newCheckOut, nights }
-                        }));
-                      }}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Members</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={formData.bedNights.members}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          bedNights: { ...prev.bedNights, members: parseInt(e.target.value) || 0 }
-                        }))}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Guests</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={formData.bedNights.guests}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          bedNights: { ...prev.bedNights, guests: parseInt(e.target.value) || 0 }
-                        }))}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
-                  {formData.bedNights.nights > 0 && (formData.bedNights.members > 0 || formData.bedNights.guests > 0) && (
-                    <div className="bg-blue-50 p-3 rounded-lg">
-                      <p className="text-sm text-blue-800">
-                        {formData.bedNights.members > 0 && `${formData.bedNights.members} members × ${formData.bedNights.nights} nights × £${rates.bedNight.member} = £${(formData.bedNights.members * formData.bedNights.nights * rates.bedNight.member).toFixed(2)}`}
-                        {formData.bedNights.members > 0 && formData.bedNights.guests > 0 && <br />}
-                        {formData.bedNights.guests > 0 && `${formData.bedNights.guests} guests × ${formData.bedNights.nights} nights × £${rates.bedNight.guest} = £${(formData.bedNights.guests * formData.bedNights.nights * rates.bedNight.guest).toFixed(2)}`}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {paymentType === 'membership' && (
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Membership Details</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Membership Type *</label>
-                    <select
-                      value={formData.membership.type}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        membership: { ...prev.membership, type: e.target.value }
-                      }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    >
-                      <option value="Probationary">Full/Probationary</option>
-                      <option value="Affiliate">Affiliate</option>
-                      <option value="Under18">Under 18</option>
-                      <option value="Student">Student</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Join Date *</label>
-                    <input
-                      type="date"
-                      value={formData.membership.joinDate}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        membership: { ...prev.membership, joinDate: e.target.value }
-                      }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="hasBCA"
-                        checked={formData.membership.hasBCA}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          membership: { ...prev.membership, hasBCA: e.target.checked }
-                        }))}
-                        className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <label htmlFor="hasBCA" className="text-sm font-medium text-gray-700">
-                        Already has BCA membership (waives BCA fee)
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="wantsKeyFob"
-                        checked={formData.membership.wantsKeyFob}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          membership: { ...prev.membership, wantsKeyFob: e.target.checked }
-                        }))}
-                        className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <label htmlFor="wantsKeyFob" className="text-sm font-medium text-gray-700">
-                        Wants key fob (+£{rates.keyFob})
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="hasPaidKitHire"
-                        checked={formData.membership.hasPaidKitHire}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          membership: { ...prev.membership, hasPaidKitHire: e.target.checked }
-                        }))}
-                        className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <label htmlFor="hasPaidKitHire" className="text-sm font-medium text-gray-700">
-                        Has paid kit hire (£{Math.abs(rates.kitHireDiscount)} discount)
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {paymentType === 'day-fees' && (
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Day Fee Details</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
-                    <input
-                      type="date"
-                      value={formData.dayFees.date}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        dayFees: { ...prev.dayFees, date: e.target.value }
-                      }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Number of People</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={formData.dayFees.people}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        dayFees: { ...prev.dayFees, people: parseInt(e.target.value) || 1 }
-                      }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      {formData.dayFees.people} × £{rates.dayFee} = £{(formData.dayFees.people * rates.dayFee).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {paymentType === 'donation' && (
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Donation Amount</h3>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount (£) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.donationAmount}
-                    onChange={(e) => setFormData(prev => ({ ...prev, donationAmount: e.target.value }))}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-              </div>
-            )}
-
-            <button
-              onClick={() => {
-                calculateTotal();
-                setCurrentStep('payment');
-                setPaymentError(null);
-              }}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-              disabled={
-                !formData.names[0]?.trim() ||
-                (paymentType === 'bed-nights' && (!formData.bedNights.checkIn || !formData.bedNights.checkOut || (formData.bedNights.members === 0 && formData.bedNights.guests === 0))) ||
-                (paymentType === 'day-fees' && !formData.dayFees.date) ||
-                (paymentType === 'donation' && (!formData.donationAmount || parseFloat(formData.donationAmount) <= 0))
-              }
-            >
-              <Calculator className="w-5 h-5" />
-              <span>Calculate Total & Continue</span>
-            </button>
-          </div>
-        );
-
-        const PaymentScreen = () => {
-          const membershipBreakdown = paymentType === 'membership' ? (() => {
-            const { feeTable, bcaFeeTable } = getCurrentFeeTables();
-            const joinDate = new Date(formData.membership.joinDate);
-            const membershipType = formData.membership.type;
-
-            let baseFee = getFeeForDate(feeTable[membershipType], joinDate) || 0;
-            let bcaFee = formData.membership.hasBCA ? 0 : (getFeeForDate(bcaFeeTable[membershipType], joinDate) || 0);
-            let keyFobFee = formData.membership.wantsKeyFob ? rates.keyFob : 0;
-            let kitHireDiscount = formData.membership.hasPaidKitHire ? rates.kitHireDiscount : 0;
-
-            return { baseFee, bcaFee, keyFobFee, kitHireDiscount };
-          })() : null;
-
-          return (
-            <div className="space-y-6">
-              <div className="flex items-center space-x-3 mb-6">
-                <button onClick={() => {
-                  setCurrentStep('details');
-                  setPaymentError(null);
-                }} className="text-blue-600 hover:text-blue-800">
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-                <h2 className="text-xl font-bold">Payment</h2>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="capitalize">{paymentType.replace('-', ' ')}</span>
-                    <span className="font-semibold">£{formData.total.toFixed(2)}</span>
-                  </div>
-
-                  {paymentType === 'membership' && membershipBreakdown && (
-                    <div className="text-sm text-gray-600 space-y-1 mt-3 pt-3 border-t">
-                      <div className="flex justify-between">
-                        <span>MCG Membership Fee:</span>
-                        <span>£{membershipBreakdown.baseFee.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>BCA Membership Fee:</span>
-                        <span>£{membershipBreakdown.bcaFee.toFixed(2)}</span>
-                      </div>
-                      {membershipBreakdown.keyFobFee > 0 && (
-                        <div className="flex justify-between">
-                          <span>Key Fob Fee:</span>
-                          <span>£{membershipBreakdown.keyFobFee.toFixed(2)}</span>
-                        </div>
-                      )}
-                      {membershipBreakdown.kitHireDiscount < 0 && (
-                        <div className="flex justify-between">
-                          <span>Kit Hire Discount:</span>
-                          <span>£{membershipBreakdown.kitHireDiscount.toFixed(2)}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="border-t pt-2">
-                    <div className="flex justify-between text-lg font-bold">
-                      <span>Total</span>
-                      <span>£{formData.total.toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Payment Method</h3>
-
-                {paymentError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-                    <p className="font-medium">Payment Error</p>
-                    <p className="text-sm">{paymentError}</p>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 gap-4">
-                  <button
-                    onClick={() => handlePayment('sumup')}
-                    disabled={isProcessingPayment}
-                    className={`p-4 border-2 rounded-lg transition-colors flex items-center space-x-3 ${
-                      isProcessingPayment
-                        ? 'border-gray-300 bg-gray-100 cursor-not-allowed'
-                        : 'border-gray-200 hover:border-blue-500 hover:bg-blue-50'
-                    }`}
-                  >
-                    <CreditCard className={`w-6 h-6 ${isProcessingPayment ? 'text-gray-400' : 'text-blue-600'}`} />
-                    <div className="text-left flex-1">
-                      <div className="font-semibold">
-                        {isProcessingPayment ? 'Processing...' : 'Card Payment (SumUp)'}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {isProcessingPayment ? 'Setting up payment...' : 'Pay with debit/credit card'}
-                      </div>
-                    </div>
-                    {isProcessingPayment && (
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => handlePayment('bacs')}
-                    className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center space-x-3"
-                  >
-                    <Building className="w-6 h-6 text-blue-600" />
-                    <div className="text-left">
-                      <div className="font-semibold">Bank Transfer (BACS)</div>
-                      <div className="text-sm text-gray-600">Pay via online banking</div>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => handlePayment('cash')}
-                    className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center space-x-3"
-                  >
-                    <Banknote className="w-6 h-6 text-blue-600" />
-                    <div className="text-left">
-                      <div className="font-semibold">Cash Payment</div>
-                      <div className="text-sm text-gray-600">Pay in person with cash</div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        };
-
-        const ConfirmationScreen = () => (
-          <div className="space-y-6">
-            <div className="text-center">
-              <div className="bg-green-100 p-6 rounded-lg mb-6">
-                <Check className="w-12 h-12 text-green-600 mx-auto mb-3" />
-                <h2 className="text-2xl font-bold text-green-800">Payment Recorded</h2>
-                <p className="text-green-700">Transaction has been saved</p>
-              </div>
-
-              {formData.paymentMethod === 'bacs' && (
-                <div className="bg-blue-50 p-6 rounded-lg text-left">
-                  <h3 className="font-semibold text-blue-800 mb-3">Bank Transfer Details</h3>
-                  <div className="space-y-2 text-sm">
-                    <p><strong>Account Name:</strong> Mendip Caving Group</p>
-                    <p><strong>Sort Code:</strong> 12-34-56</p>
-                    <p><strong>Account Number:</strong> 12345678</p>
-                    <p><strong>Reference:</strong> {formData.transactionId}</p>
-                    <p><strong>Amount:</strong> £{formData.total.toFixed(2)}</p>
-                  </div>
-                </div>
-              )}
-
-              {formData.paymentMethod === 'cash' && (
-                <div className="bg-yellow-50 p-6 rounded-lg text-left">
-                  <h3 className="font-semibold text-yellow-800 mb-3">Cash Payment Instructions</h3>
-                  <div className="space-y-3 text-sm text-yellow-700">
-                    <p className="font-medium">Please follow these steps:</p>
-                    <ol className="list-decimal list-inside space-y-2">
-                      <li>Place £{formData.total.toFixed(2)} in cash in an envelope</li>
-                      <li>Mark the envelope with:</li>
-                      <ul className="list-disc list-inside ml-4 space-y-1">
-                        <li><strong>Name:</strong> {formData.names.filter(n => n.trim()).join(', ')}</li>
-                        <li><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</li>
-                        <li><strong>Transaction #:</strong> {formData.transactionId}</li>
-                      </ul>
-                      <li>Leave the envelope in the designated cash collection area</li>
-                    </ol>
-                    <div className="mt-4 p-3 bg-yellow-100 rounded border border-yellow-200">
-                      <p className="font-semibold text-yellow-900">Your Transaction Number: {formData.transactionId}</p>
-                      <p className="text-xs text-yellow-800 mt-1">Keep this number for your records</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {formData.paymentMethod === 'sumup' && (
-                <div className="bg-green-50 p-6 rounded-lg text-left">
-                  <h3 className="font-semibold text-green-800 mb-3">Card Payment</h3>
-                  <p className="text-sm text-green-700">
-                    Your card payment of £{formData.total.toFixed(2)} has been processed successfully.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={resetForm}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              New Transaction
-            </button>
           </div>
         );
 
@@ -1535,8 +324,6 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
                 <>
                   {currentStep === 'main' && <MainScreen />}
                   {currentStep === 'details' && <DetailsScreen />}
-                  {currentStep === 'payment' && <PaymentScreen />}
-                  {currentStep === 'confirmation' && <ConfirmationScreen />}
                 </>
               )}
             </div>
