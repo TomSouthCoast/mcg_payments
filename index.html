@@ -1376,41 +1376,18 @@ root.render(<MCGPaymentApp />);
         manifestLink.href = manifestURL;
         document.head.appendChild(manifestLink);
 
-        // Create service worker dynamically
-        const swCode = `
-            const CACHE_NAME = 'mcg-payments-v1';
-            const urlsToCache = [
-                '/',
-                '/offline.html'
-            ];
-
-            self.addEventListener('install', (event) => {
-                event.waitUntil(
-                    caches.open(CACHE_NAME)
-                        .then((cache) => cache.addAll(urlsToCache))
-                );
-            });
-
-            self.addEventListener('fetch', (event) => {
-                event.respondWith(
-                    caches.match(event.request)
-                        .then((response) => {
-                            if (response) {
-                                return response;
-                            }
-                            return fetch(event.request);
-                        })
-                );
-            });
-        `;
-
-        // Register the service worker code as a blob URL
-        const swBlob = new Blob([swCode], {type: 'application/javascript'});
-        const swURL = URL.createObjectURL(swBlob);
-        
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register(swURL);
-        }
+       // --- ADD THIS CODE IN ITS PLACE ---
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+      })
+      .catch(error => {
+        console.log('ServiceWorker registration failed: ', error);
+      });
+  });
+}
     </script>
 </body>
 </html>
