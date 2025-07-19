@@ -31,7 +31,7 @@ jobs:
           ###### Repository/Build Configurations ######
           app_location: "mcg_payments/" # Full path to your app
           api_location: "mcg_payments/api" # Full path to API
-          output_location: ""
+          output_location: "mcg_payments"
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
