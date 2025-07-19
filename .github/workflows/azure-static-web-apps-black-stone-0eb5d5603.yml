@@ -29,8 +29,8 @@ jobs:
           ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
           ###### Repository/Build Configurations ######
-          app_location: "/mcg_payments/" # Full path to your app
-          api_location: "/mcg_payments/api" # Full path to API
+          app_location: "mcg_payments/" # Full path to your app
+          api_location: "mcg_payments/api" # Full path to API
           output_location: ""
           ###### End of Repository/Build Configurations ######
 
