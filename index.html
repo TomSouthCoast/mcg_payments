@@ -23,7 +23,8 @@
     
     <script type="text/babel">
       const { useState, useEffect } = React;
-
+    console.log('Lucide library object:', lucide);
+    console.log('Data for "moon" icon:', lucide.icons.moon);
       // Helper component to render any Lucide icon from its data array
       const LucideIcon = ({ iconData, ...props }) => {
         if (!iconData) {
