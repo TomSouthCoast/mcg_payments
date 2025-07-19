@@ -12,7 +12,13 @@
 </head>
 <body>
     <div id="root"></div>
-    
+    <div id="install-prompt" style="display: none; position: fixed; bottom: 1rem; left: 1rem; right: 1rem; background-color: white; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; z-index: 1000;">
+        <p style="margin: 0; font-family: sans-serif; color: #333;">Install the MCG Payment App for a better experience!</p>
+        <div>
+            <button id="install-button" style="background-color: #2563eb; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; margin-right: 0.5rem;">Install</button>
+            <button id="install-dismiss" style="background-color: #e5e7eb; color: #333; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer;">Dismiss</button>
+        </div>
+    </div>
     <script type="text/babel">
         const { useState, useEffect } = React;
        // Replace the lucide destructuring with this:
@@ -1222,7 +1228,7 @@ const LogOut = lucide.LogOut || (() => React.createElement('span', null, '🚪')
         const { createRoot } = ReactDOM;
 const root = createRoot(document.getElementById('root'));
 root.render(<MCGPaymentApp />);
-        ReactDOM.render(<MCGPaymentApp />, document.getElementById('root'));
+        
     </script>
 
     <script>
