@@ -15,7 +15,26 @@
     
     <script type="text/babel">
         const { useState, useEffect } = React;
-        const { ChevronLeft, CreditCard, Banknote, Building, Heart, Moon, Users, Calendar, User, Calculator, Check, Plus, Minus, Download, FileText, Settings, Trash2, Lock, LogOut } = lucide;
+       // Replace the lucide destructuring with this:
+const ChevronLeft = lucide.ChevronLeft || (() => React.createElement('span', null, '←'));
+const CreditCard = lucide.CreditCard || (() => React.createElement('span', null, '💳'));
+const Banknote = lucide.Banknote || (() => React.createElement('span', null, '💵'));
+const Building = lucide.Building || (() => React.createElement('span', null, '🏦'));
+const Heart = lucide.Heart || (() => React.createElement('span', null, '❤️'));
+const Moon = lucide.Moon || (() => React.createElement('span', null, '🌙'));
+const Users = lucide.Users || (() => React.createElement('span', null, '👥'));
+const Calendar = lucide.Calendar || (() => React.createElement('span', null, '📅'));
+const User = lucide.User || (() => React.createElement('span', null, '👤'));
+const Calculator = lucide.Calculator || (() => React.createElement('span', null, '🧮'));
+const Check = lucide.Check || (() => React.createElement('span', null, '✅'));
+const Plus = lucide.Plus || (() => React.createElement('span', null, '+'));
+const Minus = lucide.Minus || (() => React.createElement('span', null, '-'));
+const Download = lucide.Download || (() => React.createElement('span', null, '⬇️'));
+const FileText = lucide.FileText || (() => React.createElement('span', null, '📄'));
+const Settings = lucide.Settings || (() => React.createElement('span', null, '⚙️'));
+const Trash2 = lucide.Trash2 || (() => React.createElement('span', null, '🗑️'));
+const Lock = lucide.Lock || (() => React.createElement('span', null, '🔒'));
+const LogOut = lucide.LogOut || (() => React.createElement('span', null, '🚪'));
 
         const MCGPaymentApp = () => {
           const [currentStep, setCurrentStep] = useState('main');
