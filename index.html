@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MCG Payment App</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2563eb">
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -19,6 +21,67 @@
     </div>
 
     <div id="root"></div>
+    
+    <script>
+      // PWA Install Prompt Logic
+      let deferredPrompt;
+      const installPrompt = document.getElementById('install-prompt');
+      const installButton = document.getElementById('install-button');
+      const dismissButton = document.getElementById('install-dismiss');
+
+      // Listen for the beforeinstallprompt event
+      window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('beforeinstallprompt event fired');
+        // Prevent the mini-infobar from appearing
+        e.preventDefault();
+        // Stash the event so it can be triggered later
+        deferredPrompt = e;
+        // Show the install prompt
+        if (installPrompt) {
+          installPrompt.style.display = 'flex';
+        }
+      });
+
+      // Handle install button click
+      if (installButton) {
+        installButton.addEventListener('click', async () => {
+          console.log('Install button clicked');
+          if (deferredPrompt) {
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            // Clear the deferredPrompt variable
+            deferredPrompt = null;
+            // Hide the install prompt
+            if (installPrompt) {
+              installPrompt.style.display = 'none';
+            }
+          }
+        });
+      }
+
+      // Handle dismiss button click
+      if (dismissButton) {
+        dismissButton.addEventListener('click', () => {
+          console.log('Dismiss button clicked');
+          if (installPrompt) {
+            installPrompt.style.display = 'none';
+          }
+          // Clear the deferredPrompt variable
+          deferredPrompt = null;
+        });
+      }
+
+      // Listen for the appinstalled event
+      window.addEventListener('appinstalled', (evt) => {
+        console.log('App was installed');
+        if (installPrompt) {
+          installPrompt.style.display = 'none';
+        }
+      });
+    </script>
     
     <script type="text/babel">
       const { useState, useEffect } = React;
@@ -37,8 +100,7 @@
         return React.createElement(tag, finalAttrs, childElements);
       };
 
-      // Correctly define all icons as components using the helper
-     // Working icon components - paste this EXACTLY
+      // Working icon components - paste this EXACTLY
 const ChevronLeft = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '←');
 const CreditCard = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '💳');
 const Banknote = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '💵');
@@ -572,7 +634,7 @@ const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px',
                   <span className="text-lg font-semibold">Donations</span>
                 </div>
                 <p className="text-gray-600 mt-2">Support the Mendip Caving Group</p>
-              </button>
+              </div>
             </div>
           </div>
         );
