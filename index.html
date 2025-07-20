@@ -586,7 +586,7 @@
             paymentMethod: method,
             names: formData.names.filter(name => name.trim() !== '').length > 0 
               ? formData.names.filter(name => name.trim() !== '') 
-              : ['Anonymous'],
+              : (paymentType === 'day-fees' ? ['Anonymous'] : paymentType === 'donation' ? ['General Donation'] : ['Anonymous']),
             details: getTransactionDetails(),
             status: method === 'sumup' ? 'pending' : 'recorded'
           };
@@ -597,7 +597,7 @@
           if (method === 'sumup') {
             const namesList = formData.names.filter(n => n.trim()).length > 0 
               ? formData.names.filter(n => n.trim()).join(', ')
-              : 'Anonymous';
+              : (paymentType === 'day-fees' ? 'Anonymous' : paymentType === 'donation' ? 'General Donation' : 'Anonymous');
             const description = `MCG ${paymentType.replace('-', ' ')} - ${namesList}`;
             processSumUpPayment(formData.total, transactionId, description);
           } else {
@@ -1046,7 +1046,9 @@
             </div>
 
             <div className="bg-white p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">Names {paymentType !== 'day-fees' && '*'}</h3>
+              <h3 className="text-lg font-semibold mb-4">
+                {paymentType === 'donation' ? 'Names or Donation type' : `Names ${paymentType !== 'day-fees' ? '*' : ''}`}
+              </h3>
               <div className="space-y-3">
                 {formData.names.map((name, index) => (
                   <div key={`name-${index}`} className="flex items-center space-x-2">
@@ -1054,9 +1056,15 @@
                       type="text"
                       value={name}
                       onChange={(e) => updateName(index, e.target.value)}
-                      placeholder={paymentType === 'day-fees' ? `Name ${index + 1} (optional)` : `Name ${index + 1} *`}
+                      placeholder={
+                        paymentType === 'donation' 
+                          ? `Social, Kitchen Box, Shower Box, etc. ${index + 1}`
+                          : paymentType === 'day-fees' 
+                            ? `Name ${index + 1} (optional)` 
+                            : `Name ${index + 1} *`
+                      }
                       className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required={paymentType !== 'day-fees'}
+                      required={paymentType !== 'day-fees' && paymentType !== 'donation'}
                       autoComplete="off"
                     />
                     {formData.names.length > 1 && (
@@ -1297,17 +1305,24 @@
             {paymentType === 'donation' && (
               <div className="bg-white p-6 rounded-lg border">
                 <h3 className="text-lg font-semibold mb-4">Donation Amount</h3>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount (£) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.donationAmount}
-                    onChange={(e) => setFormData(prev => ({ ...prev, donationAmount: e.target.value }))}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      💡 <strong>Tip:</strong> You can specify donation type (Social, Kitchen Box, Shower Box) or donor name - both are optional.
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount (£) *</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.donationAmount}
+                      onChange={(e) => setFormData(prev => ({ ...prev, donationAmount: e.target.value }))}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -1320,7 +1335,7 @@
               }}
               className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
               disabled={
-                (paymentType !== 'day-fees' && !formData.names[0]?.trim()) ||
+                (paymentType !== 'day-fees' && paymentType !== 'donation' && !formData.names[0]?.trim()) ||
                 (paymentType === 'bed-nights' && (!formData.bedNights.checkIn || !formData.bedNights.checkOut || (formData.bedNights.members === 0 && formData.bedNights.guests === 0))) ||
                 (paymentType === 'day-fees' && !formData.dayFees.date) ||
                 (paymentType === 'donation' && (!formData.donationAmount || parseFloat(formData.donationAmount) <= 0))
@@ -1492,7 +1507,7 @@
                       <li>Place £{formData.total.toFixed(2)} in cash in an envelope</li>
                       <li>Mark the envelope with:</li>
                       <ul className="list-disc list-inside ml-4 space-y-1">
-                        <li><strong>Name:</strong> {formData.names.filter(n => n.trim()).length > 0 ? formData.names.filter(n => n.trim()).join(', ') : 'Anonymous'}</li>
+                        <li><strong>Name:</strong> {formData.names.filter(n => n.trim()).length > 0 ? formData.names.filter(n => n.trim()).join(', ') : (paymentType === 'day-fees' ? 'Anonymous' : paymentType === 'donation' ? 'General Donation' : 'Anonymous')}</li>
                         <li><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</li>
                         <li><strong>Transaction #:</strong> {formData.transactionId}</li>
                       </ul>
