@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MCG Payment App</title>
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#2563eb">
+    <meta name="theme-color" content="#270393">
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -15,7 +15,7 @@
     <div id="install-prompt" style="display: none; position: fixed; bottom: 1rem; left: 1rem; right: 1rem; background-color: white; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); align-items: center; justify-content: space-between; z-index: 1000;">
         <p style="margin: 0; font-family: sans-serif; color: #333;">Install the MCG Payment App for a better experience!</p>
         <div>
-            <button id="install-button" style="background-color: #2563eb; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; margin-right: 0.5rem;">Install</button>
+            <button id="install-button" style="background-color: #270393; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; margin-right: 0.5rem;">Install</button>
             <button id="install-dismiss" style="background-color: #e5e7eb; color: #333; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer;">Dismiss</button>
         </div>
     </div>
@@ -137,7 +137,7 @@
             hasPaidKitHire: false
           },
           dayFees: {
-            date: '',
+            date: new Date().toISOString().slice(0, 10),
             people: 1
           },
           donationAmount: '',
@@ -584,7 +584,9 @@
             type: paymentType,
             amount: formData.total,
             paymentMethod: method,
-            names: formData.names.filter(name => name.trim() !== ''),
+            names: formData.names.filter(name => name.trim() !== '').length > 0 
+              ? formData.names.filter(name => name.trim() !== '') 
+              : ['Anonymous'],
             details: getTransactionDetails(),
             status: method === 'sumup' ? 'pending' : 'recorded'
           };
@@ -593,7 +595,10 @@
           setFormData(prev => ({ ...prev, paymentMethod: method, transactionId }));
 
           if (method === 'sumup') {
-            const description = `MCG ${paymentType.replace('-', ' ')} - ${formData.names.filter(n => n.trim()).join(', ')}`;
+            const namesList = formData.names.filter(n => n.trim()).length > 0 
+              ? formData.names.filter(n => n.trim()).join(', ')
+              : 'Anonymous';
+            const description = `MCG ${paymentType.replace('-', ' ')} - ${namesList}`;
             processSumUpPayment(formData.total, transactionId, description);
           } else {
             setCurrentStep('confirmation');
@@ -652,7 +657,7 @@
               hasPaidKitHire: false
             },
             dayFees: {
-              date: '',
+              date: new Date().toISOString().slice(0, 10),
               people: 1
             },
             donationAmount: '',
@@ -667,10 +672,11 @@
         const MainScreen = () => (
           <div className="space-y-6">
             <div className="text-center">
-              <div className="bg-blue-600 text-white p-4 rounded-lg mb-6 relative">
+              <div className="text-white p-4 rounded-lg mb-6 relative" style={{backgroundColor: '#270393'}}>
                 <button
                   onClick={handleAdminAccess}
-                  className="absolute top-4 right-4 p-2 text-blue-100 hover:text-white hover:bg-blue-700 rounded"
+                  className="absolute top-4 right-4 p-2 text-blue-100 hover:text-white rounded"
+                  style={{backgroundColor: 'rgba(255,255,255,0.1)'}}
                   title="Admin Panel"
                 >
                   <Settings className="w-5 h-5" />
@@ -1040,7 +1046,7 @@
             </div>
 
             <div className="bg-white p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">Names *</h3>
+              <h3 className="text-lg font-semibold mb-4">Names {paymentType !== 'day-fees' && '*'}</h3>
               <div className="space-y-3">
                 {formData.names.map((name, index) => (
                   <div key={`name-${index}`} className="flex items-center space-x-2">
@@ -1048,9 +1054,9 @@
                       type="text"
                       value={name}
                       onChange={(e) => updateName(index, e.target.value)}
-                      placeholder={`Name ${index + 1} *`}
+                      placeholder={paymentType === 'day-fees' ? `Name ${index + 1} (optional)` : `Name ${index + 1} *`}
                       className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
+                      required={paymentType !== 'day-fees'}
                       autoComplete="off"
                     />
                     {formData.names.length > 1 && (
@@ -1243,6 +1249,11 @@
               <div className="bg-white p-6 rounded-lg border">
                 <h3 className="text-lg font-semibold mb-4">Day Fee Details</h3>
                 <div className="grid grid-cols-1 gap-4">
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      💡 <strong>Tip:</strong> Names are optional for day fees - you can leave blank for anonymous usage tracking.
+                    </p>
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
                     <input
@@ -1304,7 +1315,7 @@
               }}
               className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
               disabled={
-                !formData.names[0]?.trim() ||
+                (paymentType !== 'day-fees' && !formData.names[0]?.trim()) ||
                 (paymentType === 'bed-nights' && (!formData.bedNights.checkIn || !formData.bedNights.checkOut || (formData.bedNights.members === 0 && formData.bedNights.guests === 0))) ||
                 (paymentType === 'day-fees' && !formData.dayFees.date) ||
                 (paymentType === 'donation' && (!formData.donationAmount || parseFloat(formData.donationAmount) <= 0))
@@ -1476,7 +1487,7 @@
                       <li>Place £{formData.total.toFixed(2)} in cash in an envelope</li>
                       <li>Mark the envelope with:</li>
                       <ul className="list-disc list-inside ml-4 space-y-1">
-                        <li><strong>Name:</strong> {formData.names.filter(n => n.trim()).join(', ')}</li>
+                        <li><strong>Name:</strong> {formData.names.filter(n => n.trim()).length > 0 ? formData.names.filter(n => n.trim()).join(', ') : 'Anonymous'}</li>
                         <li><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</li>
                         <li><strong>Transaction #:</strong> {formData.transactionId}</li>
                       </ul>
