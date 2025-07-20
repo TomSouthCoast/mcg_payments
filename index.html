@@ -106,6 +106,7 @@
       const Settings = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '⚙️');
       const Trash2 = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '🗑️');
       const Lock = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '🔒');
+      const ShoppingCart = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '🛒');
       const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '🚪');
 
       const MCGPaymentApp = () => {
@@ -139,6 +140,11 @@
           dayFees: {
             date: new Date().toISOString().slice(0, 10),
             people: 1
+          },
+          otherSales: {
+            description: '',
+            date: new Date().toISOString().slice(0, 10),
+            amount: ''
           },
           donationAmount: '',
           total: 0,
@@ -522,6 +528,8 @@
             total = formData.dayFees.people * rates.dayFee;
           } else if (paymentType === 'donation') {
             total = parseFloat(formData.donationAmount) || 0;
+          } else if (paymentType === 'other-sales') {
+            total = parseFloat(formData.otherSales.amount) || 0;
           }
 
           setFormData(prev => ({ ...prev, total }));
@@ -567,6 +575,7 @@
             case 'membership': return 'M';
             case 'day-fees': return 'F';
             case 'donation': return 'D';
+            case 'other-sales': return 'S';
             default: return 'T';
           }
         };
@@ -630,6 +639,12 @@
               };
             case 'donation':
               return { amount: formData.donationAmount };
+            case 'other-sales':
+              return {
+                description: formData.otherSales.description,
+                date: formData.otherSales.date,
+                amount: formData.otherSales.amount
+              };
             default:
               return {};
           }
@@ -659,6 +674,11 @@
             dayFees: {
               date: new Date().toISOString().slice(0, 10),
               people: 1
+            },
+            otherSales: {
+              description: '',
+              date: new Date().toISOString().slice(0, 10),
+              amount: ''
             },
             donationAmount: '',
             total: 0,
@@ -746,6 +766,21 @@
                   <span className="text-lg font-semibold">Donations</span>
                 </div>
                 <p className="text-gray-600 mt-2">Support the Mendip Caving Group</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  setPaymentType('other-sales');
+                  setCurrentStep('details');
+                  setPaymentError(null);
+                }}
+                className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+              >
+                <div className="flex items-center justify-center space-x-3">
+                  <ShoppingCart className="w-6 h-6 text-blue-600" />
+                  <span className="text-lg font-semibold">Other Sales</span>
+                </div>
+                <p className="text-gray-600 mt-2">T-shirts, auctions, books, merchandise</p>
               </button>
             </div>
           </div>
@@ -1327,6 +1362,66 @@
               </div>
             )}
 
+            {paymentType === 'other-sales' && (
+              <div className="bg-white p-6 rounded-lg border">
+                <h3 className="text-lg font-semibold mb-4">Sale Details</h3>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      🛍️ <strong>Examples:</strong> T-shirts, auction items, books, merchandise, equipment sales.
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <input
+                      type="text"
+                      value={formData.otherSales.description}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        otherSales: { ...prev.otherSales, description: e.target.value }
+                      }))}
+                      placeholder="e.g., Red MCG T-shirt (Large), Cave survey book, Auction item #5"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                    <input
+                      type="date"
+                      value={formData.otherSales.date}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        otherSales: { ...prev.otherSales, date: e.target.value }
+                      }))}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount (£) *</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.otherSales.amount}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        otherSales: { ...prev.otherSales, amount: e.target.value }
+                      }))}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      Total: £{(parseFloat(formData.otherSales.amount) || 0).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <button
               onClick={() => {
                 calculateTotal();
@@ -1338,7 +1433,8 @@
                 (paymentType !== 'day-fees' && paymentType !== 'donation' && !formData.names[0]?.trim()) ||
                 (paymentType === 'bed-nights' && (!formData.bedNights.checkIn || !formData.bedNights.checkOut || (formData.bedNights.members === 0 && formData.bedNights.guests === 0))) ||
                 (paymentType === 'day-fees' && !formData.dayFees.date) ||
-                (paymentType === 'donation' && (!formData.donationAmount || parseFloat(formData.donationAmount) <= 0))
+                (paymentType === 'donation' && (!formData.donationAmount || parseFloat(formData.donationAmount) <= 0)) ||
+                (paymentType === 'other-sales' && (!formData.names[0]?.trim() || !formData.otherSales.description?.trim() || !formData.otherSales.date || !formData.otherSales.amount || parseFloat(formData.otherSales.amount) <= 0))
               }
             >
               <Calculator className="w-5 h-5" />
