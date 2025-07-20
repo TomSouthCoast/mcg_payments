@@ -35,7 +35,7 @@ A Progressive Web App (PWA) for the Mendip Caving Group payment system, designed
 - **Responsive Design:** Optimized for tablet use
 - **Real-time Calculations:** Dynamic fee computation
 
-## 📁 **Project Structure**
+##  **Project Structure**
 
 ```
 mcg-payment-app/
@@ -94,7 +94,7 @@ NODE_ENV=production  # or 'development' for sandbox
 4. Get API credentials and merchant code
 5. Pair SumUp Air device with tablet
 
-## 💳 **Payment Configuration**
+##  **Payment Configuration**
 
 ### **SumUp Air Device Setup**
 1. Download SumUp app on tablet
@@ -118,7 +118,7 @@ POST /api/create-checkout
 - **Production:** Use `api.sumup.com` for live payments
 - Switch via `NODE_ENV` environment variable
 
-## 🔧 **Development**
+##  **Development**
 
 ### **Local Development**
 ```bash
@@ -143,7 +143,7 @@ swa start . --api-location api
 - `exportTransactions()`: Data export functionality
 - `saveFees()`: Custom fee table management
 
-## 📊 **Data Management**
+##  **Data Management**
 
 ### **Local Storage Schema**
 ```javascript
@@ -171,7 +171,7 @@ swa start . --api-location api
 - **CSV:** For Excel analysis and reporting
 - **JSON:** For backup and data migration
 
-## 🔐 **Security**
+##  **Security**
 
 ### **Admin Access**
 - Password: `MCG2025` (configurable in code)
@@ -188,7 +188,7 @@ swa start . --api-location api
 - No card details stored in application
 - Secure API communication with tokens
 
-## 🚀 **Deployment**
+##  **Deployment**
 
 ### **Automatic Deployment**
 GitHub Actions workflow automatically deploys on push to main branch:
@@ -214,7 +214,7 @@ az staticwebapp create \
   --branch main
 ```
 
-## 📱 **PWA Installation**
+##  **PWA Installation**
 
 ### **On Tablet**
 1. Open app in browser
@@ -228,7 +228,7 @@ az staticwebapp create \
 - Full-screen experience
 - Push notifications (if configured)
 
-## 🔍 **Monitoring**
+##  **Monitoring**
 
 ### **Application Insights** (Optional)
 ```javascript
@@ -243,7 +243,7 @@ az staticwebapp create \
 - Check SumUp device connectivity
 - Verify data export functionality
 
-## 📞 **Support**
+##  **Support**
 
 ### **Technical Issues**
 - Check browser console for errors
@@ -256,18 +256,18 @@ az staticwebapp create \
 - Support: support@sumup.com
 - Device issues: Check Bluetooth connectivity
 
-## 📄 **License**
+##  **License**
 
 [Include your license information]
 
-## 🤝 **Contributing**
+##  **Contributing**
 
 1. Fork the repository
 2. Create feature branch
 3. Make changes and test thoroughly
 4. Submit pull request with description
 
-## 📚 **Documentation**
+##  **Documentation**
 
 - **User Guide:** See `USER_GUIDE.md` for operational instructions
 - **API Documentation:** See SumUp developer documentation
