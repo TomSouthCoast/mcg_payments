@@ -85,8 +85,7 @@
     </script>
     
     <script type="text/babel">
-      const { useState, useEffect, useCallback } = React;
-      const { memo } = React;
+      const { useState, useEffect } = React;
 
       // Working icon components using emojis
       const ChevronLeft = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '←');
@@ -546,34 +545,29 @@
           return diffDays;
         };
 
-        // Form management with stable key generation
-        const [nameKeys, setNameKeys] = useState(['name-0']);
-
-        const addName = useCallback(() => {
-          const newKey = `name-${Date.now()}`;
-          setNameKeys(prev => [...prev, newKey]);
+        // Form management - simplified
+        const addName = () => {
           setFormData(prev => ({
             ...prev,
             names: [...prev.names, '']
           }));
-        }, []);
+        };
 
-        const removeName = useCallback((index) => {
+        const removeName = (index) => {
           if (formData.names.length > 1) {
-            setNameKeys(prev => prev.filter((_, i) => i !== index));
             setFormData(prev => ({
               ...prev,
               names: prev.names.filter((_, i) => i !== index)
             }));
           }
-        }, [formData.names.length]);
+        };
 
-        const updateName = useCallback((index, value) => {
+        const updateName = (index, value) => {
           setFormData(prev => ({
             ...prev,
             names: prev.names.map((name, i) => i === index ? value : name)
           }));
-        }, []);
+        };
 
         const getTransactionPrefix = (paymentType) => {
           switch (paymentType) {
@@ -661,7 +655,6 @@
           setPaymentType('');
           setIsProcessingPayment(false);
           setPaymentError(null);
-          setNameKeys(['name-0']);
           setFormData({
             names: [''],
             bedNights: {
@@ -694,33 +687,6 @@
             checkoutId: null
           });
         };
-
-        // Helper component for name inputs to prevent re-render issues
-        const NameInput = memo(({ index, value, paymentType, onUpdate }) => {
-          const getPlaceholder = () => {
-            if (paymentType === 'donation') {
-              return `Social, Kitchen Box, Shower Box, etc. ${index + 1}`;
-            } else if (paymentType === 'day-fees') {
-              return `Name ${index + 1} (optional)`;
-            } else {
-              return `Name ${index + 1} *`;
-            }
-          };
-
-          const isRequired = paymentType !== 'day-fees' && paymentType !== 'donation';
-
-          return (
-            <input
-              type="text"
-              value={value}
-              onChange={(e) => onUpdate(index, e.target.value)}
-              placeholder={getPlaceholder()}
-              className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required={isRequired}
-              autoComplete="off"
-            />
-          );
-        });
 
         // SCREEN COMPONENTS
         const MainScreen = () => (
@@ -1120,12 +1086,21 @@
               </h3>
               <div className="space-y-3">
                 {formData.names.map((name, index) => (
-                  <div key={nameKeys[index] || `name-${index}`} className="flex items-center space-x-2">
-                    <NameInput 
-                      index={index}
+                  <div key={`${paymentType}-name-input-${index}`} className="flex items-center space-x-2">
+                    <input
+                      type="text"
                       value={name}
-                      paymentType={paymentType}
-                      onUpdate={updateName}
+                      onChange={(e) => updateName(index, e.target.value)}
+                      placeholder={
+                        paymentType === 'donation' 
+                          ? `Social, Kitchen Box, Shower Box, etc. ${index + 1}`
+                          : paymentType === 'day-fees' 
+                            ? `Name ${index + 1} (optional)` 
+                            : `Name ${index + 1} *`
+                      }
+                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      required={paymentType !== 'day-fees' && paymentType !== 'donation'}
+                      autoComplete="off"
                     />
                     {formData.names.length > 1 && (
                       <button
