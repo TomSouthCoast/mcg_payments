@@ -1,3 +1,8 @@
+Of course. Here is the corrected code.
+
+The only changes made were to move the screen components (`MainScreen`, `DetailsScreen`, etc.) outside of the main `MCGPaymentApp` component and pass the necessary data and functions to them as props. This resolves the input focus issue without altering any of the application's logic or appearance.
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -108,6 +113,954 @@
       const Lock = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '🔒');
       const ShoppingCart = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '🛒');
       const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '🚪');
+
+      // SCREEN COMPONENTS (MOVED OUTSIDE)
+      const MainScreen = ({ rates, handleAdminAccess, setPaymentType, setCurrentStep, setPaymentError }) => (
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className="text-white p-4 rounded-lg mb-6 relative" style={{backgroundColor: '#270393'}}>
+              <button
+                onClick={handleAdminAccess}
+                className="absolute top-4 right-4 p-2 text-blue-100 hover:text-white rounded"
+                style={{backgroundColor: 'rgba(255,255,255,0.1)'}}
+                title="Admin Panel"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+              <h1 className="text-2xl font-bold">Mendip Caving Group</h1>
+              <p className="text-blue-100">Payment System</p>
+            </div>
+            <p className="text-gray-600 mb-6">What would you like to pay for today?</p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            <button
+              onClick={() => {
+                setPaymentType('bed-nights');
+                setCurrentStep('details');
+                setPaymentError(null);
+              }}
+              className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+            >
+              <div className="flex items-center justify-center space-x-3">
+                <Moon className="w-6 h-6 text-blue-600" />
+                <span className="text-lg font-semibold">Bed Nights</span>
+              </div>
+              <p className="text-gray-600 mt-2">£{rates.bedNight.member}/night (members) • £{rates.bedNight.guest}/night (guests)</p>
+            </button>
+
+            <button
+              onClick={() => {
+                setPaymentType('membership');
+                setCurrentStep('details');
+                setPaymentError(null);
+              }}
+              className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+            >
+              <div className="flex items-center justify-center space-x-3">
+                <Users className="w-6 h-6 text-blue-600" />
+                <span className="text-lg font-semibold">MCG Membership</span>
+              </div>
+              <p className="text-gray-600 mt-2">Variable pricing based on membership type and join date</p>
+            </button>
+
+            <button
+              onClick={() => {
+                setPaymentType('day-fees');
+                setCurrentStep('details');
+                setPaymentError(null);
+              }}
+              className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+            >
+              <div className="flex items-center justify-center space-x-3">
+                <Calendar className="w-6 h-6 text-blue-600" />
+                <span className="text-lg font-semibold">Day Fees</span>
+              </div>
+              <p className="text-gray-600 mt-2">£{rates.dayFee} per person per day (showers & kitchen use)</p>
+            </button>
+
+            <button
+              onClick={() => {
+                setPaymentType('donation');
+                setCurrentStep('details');
+                setPaymentError(null);
+              }}
+              className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+            >
+              <div className="flex items-center justify-center space-x-3">
+                <Heart className="w-6 h-6 text-blue-600" />
+                <span className="text-lg font-semibold">Donations</span>
+              </div>
+              <p className="text-gray-600 mt-2">Support the Mendip Caving Group</p>
+            </button>
+
+            <button
+              onClick={() => {
+                setPaymentType('other-sales');
+                setCurrentStep('details');
+                setPaymentError(null);
+              }}
+              className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+            >
+              <div className="flex items-center justify-center space-x-3">
+                <ShoppingCart className="w-6 h-6 text-blue-600" />
+                <span className="text-lg font-semibold">Other Sales</span>
+              </div>
+              <p className="text-gray-600 mt-2">T-shirts, auctions, books, merchandise</p>
+            </button>
+          </div>
+        </div>
+      );
+
+      const PasswordScreen = ({ setShowAdmin, passwordInput, setPasswordInput, passwordError, handlePasswordSubmit }) => (
+        <div className="space-y-6">
+          <div className="flex items-center space-x-3 mb-6">
+            <button onClick={() => setShowAdmin(false)} className="text-blue-600 hover:text-blue-800">
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <h2 className="text-xl font-bold">Admin Access</h2>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border">
+            <div className="text-center mb-6">
+              <Lock className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <h3 className="text-lg font-semibold text-gray-800">Password Required</h3>
+              <p className="text-gray-600">Enter admin password to access transaction management</p>
+            </div>
+
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <div>
+                <input
+                  type="password"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  placeholder="Enter admin password"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center"
+                  autoFocus
+                  required
+                />
+              </div>
+
+              {passwordError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-center">
+                  <p className="text-sm">{passwordError}</p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Access Admin Panel
+              </button>
+            </form>
+          </div>
+
+          <div className="bg-gray-50 p-4 rounded-lg border">
+            <p className="text-sm text-gray-600 text-center">
+              Admin access is required to view transactions, export data, and manage the system.
+            </p>
+          </div>
+        </div>
+      );
+
+      const FeeEditorScreen = ({ setShowFeeEditor, saveFees, editingFees, resetFeesToDefault, updateFeeAmount }) => (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between mb-6">
+            <button 
+              onClick={() => setShowFeeEditor(false)}
+              className="text-blue-600 hover:text-blue-800 flex items-center space-x-2"
+            >
+              <ChevronLeft className="w-6 h-6" />
+              <span>Back to Admin</span>
+            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => saveFees(editingFees)}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Save Changes
+              </button>
+              <button
+                onClick={resetFeesToDefault}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Reset to Default
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <h4 className="font-semibold text-blue-800 mb-2">Fee Management</h4>
+            <p className="text-sm text-blue-700">
+              Update membership fees for different periods and membership types. Changes are saved locally and will be used for all future calculations.
+            </p>
+          </div>
+
+          {/* MCG Membership Fees */}
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold mb-4">MCG Membership Fees</h3>
+            {Object.entries(editingFees?.membershipFees || {}).map(([membershipType, periods]) => (
+              <div key={membershipType} className="mb-6 last:mb-0">
+                <h4 className="font-medium text-gray-800 mb-3 pb-2 border-b">{membershipType}</h4>
+                <div className="grid grid-cols-1 gap-3">
+                  {periods.map((period, index) => (
+                    <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded">
+                      <div className="flex-1">
+                        <span className="text-sm text-gray-600">
+                          {new Date(period.start).toLocaleDateString('en-GB')} - {new Date(period.end).toLocaleDateString('en-GB')}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-600">£</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={period.fee}
+                          onChange={(e) => updateFeeAmount('membershipFees', membershipType, index, e.target.value)}
+                          className="w-20 p-2 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* BCA Membership Fees */}
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold mb-4">BCA Membership Fees</h3>
+            {Object.entries(editingFees?.bcaFees || {}).map(([membershipType, periods]) => (
+              <div key={membershipType} className="mb-6 last:mb-0">
+                <h4 className="font-medium text-gray-800 mb-3 pb-2 border-b">{membershipType}</h4>
+                <div className="grid grid-cols-1 gap-3">
+                  {periods.map((period, index) => (
+                    <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded">
+                      <div className="flex-1">
+                        <span className="text-sm text-gray-600">
+                          {new Date(period.start).toLocaleDateString('en-GB')} - {new Date(period.end).toLocaleDateString('en-GB')}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-600">£</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={period.fee}
+                          onChange={(e) => updateFeeAmount('bcaFees', membershipType, index, e.target.value)}
+                          className="w-20 p-2 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+            <h4 className="font-semibold text-yellow-800 mb-2">Important Notes</h4>
+            <ul className="text-sm text-yellow-700 space-y-1">
+              <li>• Changes take effect immediately after saving</li>
+              <li>• Fees are pro-rated based on join date within the specified periods</li>
+              <li>• All amounts should be in GBP (£)</li>
+              <li>• Use "Reset to Default" to restore original fee structure</li>
+              <li>• Custom fees are stored locally on this device</li>
+            </ul>
+          </div>
+        </div>
+      );
+      
+      const AdminScreen = (props) => (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <button onClick={props.handleAdminLogout} className="text-blue-600 hover:text-blue-800">
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <h2 className="text-xl font-bold">
+                {props.showFeeEditor ? 'Fee Management' : 'Transaction Management'}
+              </h2>
+            </div>
+            <button
+              onClick={props.handleAdminLogout}
+              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
+
+          {props.showFeeEditor ? (
+            <FeeEditorScreen {...props} />
+          ) : (
+            <>
+              <div className="bg-white p-6 rounded-lg border">
+                <h3 className="text-lg font-semibold mb-4">System Management</h3>
+                <div className="grid grid-cols-1 gap-3">
+                  <button
+                    onClick={props.startEditingFees}
+                    className="p-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
+                  >
+                    <Calculator className="w-5 h-5" />
+                    <span>Manage Membership Fees</span>
+                  </button>
+                  <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                    {props.customFees ? 'Custom fees are active' : 'Using default fees'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg border">
+                <h3 className="text-lg font-semibold mb-4">Export Data</h3>
+                <div className="grid grid-cols-1 gap-3">
+                  <button
+                    onClick={props.exportToCSV}
+                    className="p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+                  >
+                    <FileText className="w-5 h-5" />
+                    <span>Export to CSV (Excel)</span>
+                  </button>
+                  <button
+                    onClick={props.exportTransactions}
+                    className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                  >
+                    <Download className="w-5 h-5" />
+                    <span>Export to JSON (Backup)</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg border">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">Recent Transactions ({props.transactions.length})</h3>
+                  {props.transactions.length > 0 && (
+                    <button
+                      onClick={props.clearAllData}
+                      className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Clear All</span>
+                    </button>
+                  )}
+                </div>
+
+                {props.transactions.length === 0 ? (
+                  <p className="text-gray-500 italic">No transactions recorded yet.</p>
+                ) : (
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {props.transactions.slice(-10).reverse().map((transaction) => (
+                      <div key={transaction.id} className="border rounded-lg p-4 bg-gray-50">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold">{transaction.transactionNumber || transaction.id}</p>
+                            <p className="text-sm text-gray-600">{transaction.names.join(', ')}</p>
+                            <p className="text-sm text-gray-600">{transaction.type.replace('-', ' ')}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold">£{transaction.amount.toFixed(2)}</p>
+                            <p className="text-sm text-gray-600">{transaction.paymentMethod}</p>
+                            <p className={`text-sm px-2 py-1 rounded text-white ${
+                              transaction.status === 'completed' ? 'bg-green-600' :
+                              transaction.status === 'pending' ? 'bg-yellow-600' :
+                              transaction.status === 'failed' ? 'bg-red-600' :
+                              'bg-gray-600'
+                            }`}>
+                              {transaction.status}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          {new Date(transaction.date).toLocaleString('en-GB')}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                <h4 className="font-semibold text-yellow-800 mb-2">Data Storage</h4>
+                <p className="text-sm text-yellow-700">
+                  All transaction data and custom fees are stored locally on this device. Export regularly for backup.
+                  Data will persist until manually cleared or browser storage is reset.
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      );
+
+      const DetailsScreen = ({ paymentType, formData, setFormData, rates, setCurrentStep, setPaymentError, updateName, addName, removeName, calculateNights, calculateTotal }) => (
+        <div className="space-y-6">
+          <div className="flex items-center space-x-3 mb-6">
+            <button onClick={() => {
+              setCurrentStep('main');
+              setPaymentError(null);
+            }} className="text-blue-600 hover:text-blue-800">
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <h2 className="text-xl font-bold capitalize">{paymentType.replace('-', ' ')}</h2>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold mb-4">
+              {paymentType === 'donation' ? 'Names or Donation type' : `Names ${paymentType !== 'day-fees' ? '*' : ''}`}
+            </h3>
+            <div className="space-y-3">
+              {formData.names.map((name, index) => (
+                <div key={`${paymentType}-name-input-${index}`} className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => updateName(index, e.target.value)}
+                    placeholder={
+                      paymentType === 'donation' 
+                        ? `Social, Kitchen Box, Shower Box, etc. ${index + 1}`
+                        : paymentType === 'day-fees' 
+                          ? `Name ${index + 1} (optional)` 
+                          : `Name ${index + 1} *`
+                    }
+                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required={paymentType !== 'day-fees' && paymentType !== 'donation'}
+                    autoComplete="off"
+                  />
+                  {formData.names.length > 1 && (
+                    <button
+                      onClick={() => removeName(index)}
+                      className="p-2 text-red-600 hover:text-red-800"
+                      type="button"
+                    >
+                      <Minus className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                onClick={addName}
+                className="flex items-center space-x-2 text-blue-600 hover:text-blue-800"
+                type="button"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add another name</span>
+              </button>
+            </div>
+          </div>
+
+          {paymentType === 'bed-nights' && (
+            <div className="bg-white p-6 rounded-lg border">
+              <h3 className="text-lg font-semibold mb-4">Bed Night Details</h3>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
+                  <p className="text-sm text-orange-800">
+                    🔥 <strong>Important:</strong> Please also complete the 'Overnight Stay & Fire Register' form by the front door in full upon arrival.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Check-in Date *</label>
+                  <input
+                    type="date"
+                    value={formData.bedNights.checkIn}
+                    onChange={(e) => {
+                      const newCheckIn = e.target.value;
+                      const nights = calculateNights(newCheckIn, formData.bedNights.checkOut);
+                      setFormData(prev => ({
+                        ...prev,
+                        bedNights: { ...prev.bedNights, checkIn: newCheckIn, nights }
+                      }));
+                    }}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Check-out Date *</label>
+                  <input
+                    type="date"
+                    value={formData.bedNights.checkOut}
+                    onChange={(e) => {
+                      const newCheckOut = e.target.value;
+                      const nights = calculateNights(formData.bedNights.checkIn, newCheckOut);
+                      setFormData(prev => ({
+                        ...prev,
+                        bedNights: { ...prev.bedNights, checkOut: newCheckOut, nights }
+                      }));
+                    }}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Members</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.bedNights.members}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        bedNights: { ...prev.bedNights, members: parseInt(e.target.value) || 0 }
+                      }))}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Guests</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.bedNights.guests}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        bedNights: { ...prev.bedNights, guests: parseInt(e.target.value) || 0 }
+                      }))}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+                {formData.bedNights.nights > 0 && (formData.bedNights.members > 0 || formData.bedNights.guests > 0) && (
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      {formData.bedNights.members > 0 && `${formData.bedNights.members} members × ${formData.bedNights.nights} nights × £${rates.bedNight.member} = £${(formData.bedNights.members * formData.bedNights.nights * rates.bedNight.member).toFixed(2)}`}
+                      {formData.bedNights.members > 0 && formData.bedNights.guests > 0 && <br />}
+                      {formData.bedNights.guests > 0 && `${formData.bedNights.guests} guests × ${formData.bedNights.nights} nights × £${rates.bedNight.guest} = £${(formData.bedNights.guests * formData.bedNights.nights * rates.bedNight.guest).toFixed(2)}`}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {paymentType === 'membership' && (
+            <div className="bg-white p-6 rounded-lg border">
+              <h3 className="text-lg font-semibold mb-4">Membership Details</h3>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Membership Type *</label>
+                  <select
+                    value={formData.membership.type}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      membership: { ...prev.membership, type: e.target.value }
+                    }))}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  >
+                    <option value="Probationary">Full/Probationary</option>
+                    <option value="Affiliate">Affiliate</option>
+                    <option value="Under18">Under 18</option>
+                    <option value="Student">Student</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Join Date *</label>
+                  <input
+                    type="date"
+                    value={formData.membership.joinDate}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      membership: { ...prev.membership, joinDate: e.target.value }
+                    }))}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="hasBCA"
+                      checked={formData.membership.hasBCA}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        membership: { ...prev.membership, hasBCA: e.target.checked }
+                      }))}
+                      className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="hasBCA" className="text-sm font-medium text-gray-700">
+                      Already has BCA membership (waives BCA fee)
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="wantsKeyFob"
+                      checked={formData.membership.wantsKeyFob}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        membership: { ...prev.membership, wantsKeyFob: e.target.checked }
+                      }))}
+                      className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="wantsKeyFob" className="text-sm font-medium text-gray-700">
+                      Wants key fob (+£{rates.keyFob})
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="hasPaidKitHire"
+                      checked={formData.membership.hasPaidKitHire}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        membership: { ...prev.membership, hasPaidKitHire: e.target.checked }
+                      }))}
+                      className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="hasPaidKitHire" className="text-sm font-medium text-gray-700">
+                      Has paid kit hire (£{Math.abs(rates.kitHireDiscount)} discount)
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {paymentType === 'day-fees' && (
+            <div className="bg-white p-6 rounded-lg border">
+              <h3 className="text-lg font-semibold mb-4">Day Fee Details</h3>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    💡 <strong>Tip:</strong> Names are optional for day fees - you can leave blank for anonymous usage tracking.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                  <input
+                    type="date"
+                    value={formData.dayFees.date}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      dayFees: { ...prev.dayFees, date: e.target.value }
+                    }))}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Number of People</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.dayFees.people}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      dayFees: { ...prev.dayFees, people: parseInt(e.target.value) || 1 }
+                    }))}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    {formData.dayFees.people} × £{rates.dayFee} = £{(formData.dayFees.people * rates.dayFee).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {paymentType === 'donation' && (
+            <div className="bg-white p-6 rounded-lg border">
+              <h3 className="text-lg font-semibold mb-4">Donation Amount</h3>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    💡 <strong>Tip:</strong> You can specify donation type (Social, Kitchen Box, Shower Box) or donor name - both are optional.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount (£) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.donationAmount}
+                    onChange={(e) => setFormData(prev => ({ ...prev, donationAmount: e.target.value }))}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {paymentType === 'other-sales' && (
+            <div className="bg-white p-6 rounded-lg border">
+              <h3 className="text-lg font-semibold mb-4">Sale Details</h3>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    🛍️ <strong>Examples:</strong> T-shirts, auction items, books, merchandise, equipment sales.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                  <input
+                    type="text"
+                    value={formData.otherSales.description}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      otherSales: { ...prev.otherSales, description: e.target.value }
+                    }))}
+                    placeholder="e.g., Red MCG T-shirt (Large), Cave survey book, Auction item #5"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                  <input
+                    type="date"
+                    value={formData.otherSales.date}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      otherSales: { ...prev.otherSales, date: e.target.value }
+                    }))}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount (£) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.otherSales.amount}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      otherSales: { ...prev.otherSales, amount: e.target.value }
+                    }))}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    Total: £{(parseFloat(formData.otherSales.amount) || 0).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={() => {
+              calculateTotal();
+              setCurrentStep('payment');
+              setPaymentError(null);
+            }}
+            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+            disabled={
+              (paymentType !== 'day-fees' && paymentType !== 'donation' && !formData.names[0]?.trim()) ||
+              (paymentType === 'bed-nights' && (!formData.bedNights.checkIn || !formData.bedNights.checkOut || (formData.bedNights.members === 0 && formData.bedNights.guests === 0))) ||
+              (paymentType === 'day-fees' && !formData.dayFees.date) ||
+              (paymentType === 'donation' && (!formData.donationAmount || parseFloat(formData.donationAmount) <= 0)) ||
+              (paymentType === 'other-sales' && (!formData.names[0]?.trim() || !formData.otherSales.description?.trim() || !formData.otherSales.date || !formData.otherSales.amount || parseFloat(formData.otherSales.amount) <= 0))
+            }
+          >
+            <Calculator className="w-5 h-5" />
+            <span>Calculate Total & Continue</span>
+          </button>
+        </div>
+      );
+
+      const PaymentScreen = ({ paymentType, formData, rates, paymentError, isProcessingPayment, handlePayment, getCurrentFeeTables, getFeeForDate, setCurrentStep, setPaymentError }) => {
+        const membershipBreakdown = paymentType === 'membership' ? (() => {
+          const { feeTable, bcaFeeTable } = getCurrentFeeTables();
+          const joinDate = new Date(formData.membership.joinDate);
+          const membershipType = formData.membership.type;
+
+          let baseFee = getFeeForDate(feeTable[membershipType], joinDate) || 0;
+          let bcaFee = formData.membership.hasBCA ? 0 : (getFeeForDate(bcaFeeTable[membershipType], joinDate) || 0);
+          let keyFobFee = formData.membership.wantsKeyFob ? rates.keyFob : 0;
+          let kitHireDiscount = formData.membership.hasPaidKitHire ? rates.kitHireDiscount : 0;
+
+          return { baseFee, bcaFee, keyFobFee, kitHireDiscount };
+        })() : null;
+
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center space-x-3 mb-6">
+              <button onClick={() => {
+                setCurrentStep('details');
+                setPaymentError(null);
+              }} className="text-blue-600 hover:text-blue-800">
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <h2 className="text-xl font-bold">Payment</h2>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg border">
+              <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="capitalize">{paymentType.replace('-', ' ')}</span>
+                  <span className="font-semibold">£{formData.total.toFixed(2)}</span>
+                </div>
+
+                {paymentType === 'membership' && membershipBreakdown && (
+                  <div className="text-sm text-gray-600 space-y-1 mt-3 pt-3 border-t">
+                    <div className="flex justify-between">
+                      <span>MCG Membership Fee:</span>
+                      <span>£{membershipBreakdown.baseFee.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>BCA Membership Fee:</span>
+                      <span>£{membershipBreakdown.bcaFee.toFixed(2)}</span>
+                    </div>
+                    {membershipBreakdown.keyFobFee > 0 && (
+                      <div className="flex justify-between">
+                        <span>Key Fob Fee:</span>
+                        <span>£{membershipBreakdown.keyFobFee.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {membershipBreakdown.kitHireDiscount < 0 && (
+                      <div className="flex justify-between">
+                        <span>Kit Hire Discount:</span>
+                        <span>£{membershipBreakdown.kitHireDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="border-t pt-2">
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total</span>
+                    <span>£{formData.total.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg border">
+              <h3 className="text-lg font-semibold mb-4">Payment Method</h3>
+
+              {paymentError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+                  <p className="font-medium">Payment Error</p>
+                  <p className="text-sm">{paymentError}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-4">
+                <button
+                  onClick={() => handlePayment('sumup')}
+                  disabled={isProcessingPayment}
+                  className={`p-4 border-2 rounded-lg transition-colors flex items-center space-x-3 ${
+                    isProcessingPayment
+                      ? 'border-gray-300 bg-gray-100 cursor-not-allowed'
+                      : 'border-gray-200 hover:border-blue-500 hover:bg-blue-50'
+                  }`}
+                >
+                  <CreditCard className={`w-6 h-6 ${isProcessingPayment ? 'text-gray-400' : 'text-blue-600'}`} />
+                  <div className="text-left flex-1">
+                    <div className="font-semibold">
+                      {isProcessingPayment ? 'Processing...' : 'Card Payment (SumUp)'}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {isProcessingPayment ? 'Setting up payment...' : 'Pay with debit/credit card'}
+                    </div>
+                  </div>
+                  {isProcessingPayment && (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => handlePayment('bacs')}
+                  className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center space-x-3"
+                >
+                  <Building className="w-6 h-6 text-blue-600" />
+                  <div className="text-left">
+                    <div className="font-semibold">Bank Transfer (BACS)</div>
+                    <div className="text-sm text-gray-600">Pay via online banking</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => handlePayment('cash')}
+                  className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center space-x-3"
+                >
+                  <Banknote className="w-6 h-6 text-blue-600" />
+                  <div className="text-left">
+                    <div className="font-semibold">Cash Payment</div>
+                    <div className="text-sm text-gray-600">Pay in person with cash</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      const ConfirmationScreen = ({ formData, paymentType, resetForm }) => (
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className="bg-green-100 p-6 rounded-lg mb-6">
+              <Check className="w-12 h-12 text-green-600 mx-auto mb-3" />
+              <h2 className="text-2xl font-bold text-green-800">Payment Recorded</h2>
+              <p className="text-green-700">Transaction has been saved</p>
+            </div>
+
+            {formData.paymentMethod === 'bacs' && (
+              <div className="bg-blue-50 p-6 rounded-lg text-left">
+                <h3 className="font-semibold text-blue-800 mb-3">Bank Transfer Details</h3>
+                <div className="space-y-2 text-sm">
+                  <p><strong>Account Name:</strong> Mendip Caving Group</p>
+                  <p><strong>Sort Code:</strong> 12-34-56</p>
+                  <p><strong>Account Number:</strong> 12345678</p>
+                  <p><strong>Reference:</strong> {formData.transactionId}</p>
+                  <p><strong>Amount:</strong> £{formData.total.toFixed(2)}</p>
+                </div>
+              </div>
+            )}
+
+            {formData.paymentMethod === 'cash' && (
+              <div className="bg-yellow-50 p-6 rounded-lg text-left">
+                <h3 className="font-semibold text-yellow-800 mb-3">Cash Payment Instructions</h3>
+                <div className="space-y-3 text-sm text-yellow-700">
+                  <p className="font-medium">Please follow these steps:</p>
+                  <ol className="list-decimal list-inside space-y-2">
+                    <li>Place £{formData.total.toFixed(2)} in cash in an envelope</li>
+                    <li>Mark the envelope with:</li>
+                    <ul className="list-disc list-inside ml-4 space-y-1">
+                      <li><strong>Name:</strong> {formData.names.filter(n => n.trim()).length > 0 ? formData.names.filter(n => n.trim()).join(', ') : (paymentType === 'day-fees' ? 'Anonymous' : paymentType === 'donation' ? 'General Donation' : 'Anonymous')}</li>
+                      <li><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</li>
+                      <li><strong>Transaction #:</strong> {formData.transactionId}</li>
+                    </ul>
+                    <li>Leave the envelope in the designated cash collection area</li>
+                  </ol>
+                  <div className="mt-4 p-3 bg-yellow-100 rounded border border-yellow-200">
+                    <p className="font-semibold text-yellow-900">Your Transaction Number: {formData.transactionId}</p>
+                    <p className="text-xs text-yellow-800 mt-1">Keep this number for your records</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {formData.paymentMethod === 'sumup' && (
+              <div className="bg-green-50 p-6 rounded-lg text-left">
+                <h3 className="font-semibold text-green-800 mb-3">Card Payment</h3>
+                <p className="text-sm text-green-700">
+                  Your card payment of £{formData.total.toFixed(2)} has been processed successfully.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={resetForm}
+            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            New Transaction
+          </button>
+        </div>
+      );
 
       const MCGPaymentApp = () => {
         const [currentStep, setCurrentStep] = useState('main');
@@ -650,1422 +1603,43 @@
           }
         };
 
-      // SCREEN COMPONENTS - Moved outside to prevent recreation on re-render
-      const MainScreen = ({ rates, handleAdminAccess, setPaymentType, setCurrentStep, setPaymentError }) => (
-        <div className="space-y-6">
-          <div className="text-center">
-            <div className="text-white p-4 rounded-lg mb-6 relative" style={{backgroundColor: '#270393'}}>
-              <button
-                onClick={handleAdminAccess}
-                className="absolute top-4 right-4 p-2 text-blue-100 hover:text-white rounded"
-                style={{backgroundColor: 'rgba(255,255,255,0.1)'}}
-                title="Admin Panel"
-              >
-                <Settings className="w-5 h-5" />
-              </button>
-              <h1 className="text-2xl font-bold">Mendip Caving Group</h1>
-              <p className="text-blue-100">Payment System</p>
-            </div>
-            <p className="text-gray-600 mb-6">What would you like to pay for today?</p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4">
-            <button
-              onClick={() => {
-                setPaymentType('bed-nights');
-                setCurrentStep('details');
-                setPaymentError(null);
-              }}
-              className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-            >
-              <div className="flex items-center justify-center space-x-3">
-                <Moon className="w-6 h-6 text-blue-600" />
-                <span className="text-lg font-semibold">Bed Nights</span>
-              </div>
-              <p className="text-gray-600 mt-2">£{rates.bedNight.member}/night (members) • £{rates.bedNight.guest}/night (guests)</p>
-            </button>
-
-            <button
-              onClick={() => {
-                setPaymentType('membership');
-                setCurrentStep('details');
-                setPaymentError(null);
-              }}
-              className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-            >
-              <div className="flex items-center justify-center space-x-3">
-                <Users className="w-6 h-6 text-blue-600" />
-                <span className="text-lg font-semibold">MCG Membership</span>
-              </div>
-              <p className="text-gray-600 mt-2">Variable pricing based on membership type and join date</p>
-            </button>
-
-            <button
-              onClick={() => {
-                setPaymentType('day-fees');
-                setCurrentStep('details');
-                setPaymentError(null);
-              }}
-              className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-            >
-              <div className="flex items-center justify-center space-x-3">
-                <Calendar className="w-6 h-6 text-blue-600" />
-                <span className="text-lg font-semibold">Day Fees</span>
-              </div>
-              <p className="text-gray-600 mt-2">£{rates.dayFee} per person per day (showers & kitchen use)</p>
-            </button>
-
-            <button
-              onClick={() => {
-                setPaymentType('donation');
-                setCurrentStep('details');
-                setPaymentError(null);
-              }}
-              className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-            >
-              <div className="flex items-center justify-center space-x-3">
-                <Heart className="w-6 h-6 text-blue-600" />
-                <span className="text-lg font-semibold">Donations</span>
-              </div>
-              <p className="text-gray-600 mt-2">Support the Mendip Caving Group</p>
-            </button>
-
-            <button
-              onClick={() => {
-                setPaymentType('other-sales');
-                setCurrentStep('details');
-                setPaymentError(null);
-              }}
-              className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-            >
-              <div className="flex items-center justify-center space-x-3">
-                <ShoppingCart className="w-6 h-6 text-blue-600" />
-                <span className="text-lg font-semibold">Other Sales</span>
-              </div>
-              <p className="text-gray-600 mt-2">T-shirts, auctions, books, merchandise</p>
-            </button>
-          </div>
-        </div>
-      );
-      const DetailsScreen = ({ paymentType, setCurrentStep, setPaymentError, formData, updateName, addName, removeName, setFormData, calculateNights, rates, calculateTotal }) => (
-        <div className="space-y-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <button onClick={() => {
-              setCurrentStep('main');
-              setPaymentError(null);
-            }} className="text-blue-600 hover:text-blue-800">
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-            <h2 className="text-xl font-bold capitalize">{paymentType.replace('-', ' ')}</h2>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg border">
-            <h3 className="text-lg font-semibold mb-4">
-              {paymentType === 'donation' ? 'Names or Donation type' : `Names ${paymentType !== 'day-fees' ? '*' : ''}`}
-            </h3>
-            <div className="space-y-3">
-              {formData.names.map((name, index) => (
-                <div key={`${paymentType}-name-input-${index}`} className="flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => updateName(index, e.target.value)}
-                    placeholder={
-                      paymentType === 'donation' 
-                        ? `Social, Kitchen Box, Shower Box, etc. ${index + 1}`
-                        : paymentType === 'day-fees' 
-                          ? `Name ${index + 1} (optional)` 
-                          : `Name ${index + 1} *`
-                    }
-                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required={paymentType !== 'day-fees' && paymentType !== 'donation'}
-                    autoComplete="off"
-                  />
-                  {formData.names.length > 1 && (
-                    <button
-                      onClick={() => removeName(index)}
-                      className="p-2 text-red-600 hover:text-red-800"
-                      type="button"
-                    >
-                      <Minus className="w-5 h-5" />
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                onClick={addName}
-                className="flex items-center space-x-2 text-blue-600 hover:text-blue-800"
-                type="button"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add another name</span>
-              </button>
-            </div>
-          </div>
-
-          {paymentType === 'bed-nights' && (
-            <div className="bg-white p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">Bed Night Details</h3>
-              <div className="grid grid-cols-1 gap-4">
-                <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
-                  <p className="text-sm text-orange-800">
-                    🔥 <strong>Important:</strong> Please also complete the 'Overnight Stay & Fire Register' form by the front door in full upon arrival.
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Check-in Date *</label>
-                  <input
-                    type="date"
-                    value={formData.bedNights.checkIn}
-                    onChange={(e) => {
-                      const newCheckIn = e.target.value;
-                      const nights = calculateNights(newCheckIn, formData.bedNights.checkOut);
-                      setFormData(prev => ({
-                        ...prev,
-                        bedNights: { ...prev.bedNights, checkIn: newCheckIn, nights }
-                      }));
-                    }}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Check-out Date *</label>
-                  <input
-                    type="date"
-                    value={formData.bedNights.checkOut}
-                    onChange={(e) => {
-                      const newCheckOut = e.target.value;
-                      const nights = calculateNights(formData.bedNights.checkIn, newCheckOut);
-                      setFormData(prev => ({
-                        ...prev,
-                        bedNights: { ...prev.bedNights, checkOut: newCheckOut, nights }
-                      }));
-                    }}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Members</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={formData.bedNights.members}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        bedNights: { ...prev.bedNights, members: parseInt(e.target.value) || 0 }
-                      }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Guests</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={formData.bedNights.guests}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        bedNights: { ...prev.bedNights, guests: parseInt(e.target.value) || 0 }
-                      }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-                {formData.bedNights.nights > 0 && (formData.bedNights.members > 0 || formData.bedNights.guests > 0) && (
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      {formData.bedNights.members > 0 && `${formData.bedNights.members} members × ${formData.bedNights.nights} nights × £${rates.bedNight.member} = £${(formData.bedNights.members * formData.bedNights.nights * rates.bedNight.member).toFixed(2)}`}
-                      {formData.bedNights.members > 0 && formData.bedNights.guests > 0 && <br />}
-                      {formData.bedNights.guests > 0 && `${formData.bedNights.guests} guests × ${formData.bedNights.nights} nights × £${rates.bedNight.guest} = £${(formData.bedNights.guests * formData.bedNights.nights * rates.bedNight.guest).toFixed(2)}`}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {paymentType === 'membership' && (
-            <div className="bg-white p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">Membership Details</h3>
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Membership Type *</label>
-                  <select
-                    value={formData.membership.type}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      membership: { ...prev.membership, type: e.target.value }
-                    }))}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  >
-                    <option value="Probationary">Full/Probationary</option>
-                    <option value="Affiliate">Affiliate</option>
-                    <option value="Under18">Under 18</option>
-                    <option value="Student">Student</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Join Date *</label>
-                  <input
-                    type="date"
-                    value={formData.membership.joinDate}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      membership: { ...prev.membership, joinDate: e.target.value }
-                    }))}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="hasBCA"
-                      checked={formData.membership.hasBCA}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        membership: { ...prev.membership, hasBCA: e.target.checked }
-                      }))}
-                      className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="hasBCA" className="text-sm font-medium text-gray-700">
-                      Already has BCA membership (waives BCA fee)
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="wantsKeyFob"
-                      checked={formData.membership.wantsKeyFob}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        membership: { ...prev.membership, wantsKeyFob: e.target.checked }
-                      }))}
-                      className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="wantsKeyFob" className="text-sm font-medium text-gray-700">
-                      Wants key fob (+£{rates.keyFob})
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="hasPaidKitHire"
-                      checked={formData.membership.hasPaidKitHire}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        membership: { ...prev.membership, hasPaidKitHire: e.target.checked }
-                      }))}
-                      className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="hasPaidKitHire" className="text-sm font-medium text-gray-700">
-                      Has paid kit hire (£{Math.abs(rates.kitHireDiscount)} discount)
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {paymentType === 'day-fees' && (
-            <div className="bg-white p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">Day Fee Details</h3>
-              <div className="grid grid-cols-1 gap-4">
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    💡 <strong>Tip:</strong> Names are optional for day fees - you can leave blank for anonymous usage tracking.
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
-                  <input
-                    type="date"
-                    value={formData.dayFees.date}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      dayFees: { ...prev.dayFees, date: e.target.value }
-                    }))}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Number of People</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={formData.dayFees.people}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      dayFees: { ...prev.dayFees, people: parseInt(e.target.value) || 1 }
-                    }))}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    {formData.dayFees.people} × £{rates.dayFee} = £{(formData.dayFees.people * rates.dayFee).toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {paymentType === 'donation' && (
-            <div className="bg-white p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">Donation Amount</h3>
-              <div className="grid grid-cols-1 gap-4">
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    💡 <strong>Tip:</strong> You can specify donation type (Social, Kitchen Box, Shower Box) or donor name - both are optional.
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount (£) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.donationAmount}
-                    onChange={(e) => setFormData(prev => ({ ...prev, donationAmount: e.target.value }))}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {paymentType === 'other-sales' && (
-            <div className="bg-white p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">Sale Details</h3>
-              <div className="grid grid-cols-1 gap-4">
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    🛍️ <strong>Examples:</strong> T-shirts, auction items, books, merchandise, equipment sales.
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
-                  <input
-                    type="text"
-                    value={formData.otherSales.description}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      otherSales: { ...prev.otherSales, description: e.target.value }
-                    }))}
-                    placeholder="e.g., Red MCG T-shirt (Large), Cave survey book, Auction item #5"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
-                  <input
-                    type="date"
-                    value={formData.otherSales.date}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      otherSales: { ...prev.otherSales, date: e.target.value }
-                    }))}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount (£) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.otherSales.amount}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      otherSales: { ...prev.otherSales, amount: e.target.value }
-                    }))}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    Total: £{(parseFloat(formData.otherSales.amount) || 0).toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <button
-            onClick={() => {
-              calculateTotal();
-              setCurrentStep('payment');
-              setPaymentError(null);
-            }}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-            disabled={
-              (paymentType !== 'day-fees' && paymentType !== 'donation' && !formData.names[0]?.trim()) ||
-              (paymentType === 'bed-nights' && (!formData.bedNights.checkIn || !formData.bedNights.checkOut || (formData.bedNights.members === 0 && formData.bedNights.guests === 0))) ||
-              (paymentType === 'day-fees' && !formData.dayFees.date) ||
-              (paymentType === 'donation' && (!formData.donationAmount || parseFloat(formData.donationAmount) <= 0)) ||
-              (paymentType === 'other-sales' && (!formData.names[0]?.trim() || !formData.otherSales.description?.trim() || !formData.otherSales.date || !formData.otherSales.amount || parseFloat(formData.otherSales.amount) <= 0))
-            }
-          >
-            <Calculator className="w-5 h-5" />
-            <span>Calculate Total & Continue</span>
-          </button>
-        </div>
-      );
-          <div className="space-y-6">
-            <div className="text-center">
-              <div className="text-white p-4 rounded-lg mb-6 relative" style={{backgroundColor: '#270393'}}>
-                <button
-                  onClick={handleAdminAccess}
-                  className="absolute top-4 right-4 p-2 text-blue-100 hover:text-white rounded"
-                  style={{backgroundColor: 'rgba(255,255,255,0.1)'}}
-                  title="Admin Panel"
-                >
-                  <Settings className="w-5 h-5" />
-                </button>
-                <h1 className="text-2xl font-bold">Mendip Caving Group</h1>
-                <p className="text-blue-100">Payment System</p>
-              </div>
-              <p className="text-gray-600 mb-6">What would you like to pay for today?</p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4">
-              <button
-                onClick={() => {
-                  setPaymentType('bed-nights');
-                  setCurrentStep('details');
-                  setPaymentError(null);
-                }}
-                className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-              >
-                <div className="flex items-center justify-center space-x-3">
-                  <Moon className="w-6 h-6 text-blue-600" />
-                  <span className="text-lg font-semibold">Bed Nights</span>
-                </div>
-                <p className="text-gray-600 mt-2">£{rates.bedNight.member}/night (members) • £{rates.bedNight.guest}/night (guests)</p>
-              </button>
-
-              <button
-                onClick={() => {
-                  setPaymentType('membership');
-                  setCurrentStep('details');
-                  setPaymentError(null);
-                }}
-                className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-              >
-                <div className="flex items-center justify-center space-x-3">
-                  <Users className="w-6 h-6 text-blue-600" />
-                  <span className="text-lg font-semibold">MCG Membership</span>
-                </div>
-                <p className="text-gray-600 mt-2">Variable pricing based on membership type and join date</p>
-              </button>
-
-              <button
-                onClick={() => {
-                  setPaymentType('day-fees');
-                  setCurrentStep('details');
-                  setPaymentError(null);
-                }}
-                className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-              >
-                <div className="flex items-center justify-center space-x-3">
-                  <Calendar className="w-6 h-6 text-blue-600" />
-                  <span className="text-lg font-semibold">Day Fees</span>
-                </div>
-                <p className="text-gray-600 mt-2">£{rates.dayFee} per person per day (showers & kitchen use)</p>
-              </button>
-
-              <button
-                onClick={() => {
-                  setPaymentType('donation');
-                  setCurrentStep('details');
-                  setPaymentError(null);
-                }}
-                className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-              >
-                <div className="flex items-center justify-center space-x-3">
-                  <Heart className="w-6 h-6 text-blue-600" />
-                  <span className="text-lg font-semibold">Donations</span>
-                </div>
-                <p className="text-gray-600 mt-2">Support the Mendip Caving Group</p>
-              </button>
-
-              <button
-                onClick={() => {
-                  setPaymentType('other-sales');
-                  setCurrentStep('details');
-                  setPaymentError(null);
-                }}
-                className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-              >
-                <div className="flex items-center justify-center space-x-3">
-                  <ShoppingCart className="w-6 h-6 text-blue-600" />
-                  <span className="text-lg font-semibold">Other Sales</span>
-                </div>
-                <p className="text-gray-600 mt-2">T-shirts, auctions, books, merchandise</p>
-              </button>
-            </div>
-          </div>
-        );
-
-        const PasswordScreen = () => (
-          <div className="space-y-6">
-            <div className="flex items-center space-x-3 mb-6">
-              <button onClick={() => setShowAdmin(false)} className="text-blue-600 hover:text-blue-800">
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-              <h2 className="text-xl font-bold">Admin Access</h2>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg border">
-              <div className="text-center mb-6">
-                <Lock className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-gray-800">Password Required</h3>
-                <p className="text-gray-600">Enter admin password to access transaction management</p>
-              </div>
-
-              <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                <div>
-                  <input
-                    type="password"
-                    value={passwordInput}
-                    onChange={(e) => setPasswordInput(e.target.value)}
-                    placeholder="Enter admin password"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center"
-                    autoFocus
-                    required
-                  />
-                </div>
-
-                {passwordError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-center">
-                    <p className="text-sm">{passwordError}</p>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Access Admin Panel
-                </button>
-              </form>
-            </div>
-
-            <div className="bg-gray-50 p-4 rounded-lg border">
-              <p className="text-sm text-gray-600 text-center">
-                Admin access is required to view transactions, export data, and manage the system.
-              </p>
-            </div>
-          </div>
-        );
-
-        const FeeEditorScreen = () => (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between mb-6">
-              <button 
-                onClick={() => setShowFeeEditor(false)}
-                className="text-blue-600 hover:text-blue-800 flex items-center space-x-2"
-              >
-                <ChevronLeft className="w-6 h-6" />
-                <span>Back to Admin</span>
-              </button>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => saveFees(editingFees)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  Save Changes
-                </button>
-                <button
-                  onClick={resetFeesToDefault}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Reset to Default
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <h4 className="font-semibold text-blue-800 mb-2">Fee Management</h4>
-              <p className="text-sm text-blue-700">
-                Update membership fees for different periods and membership types. Changes are saved locally and will be used for all future calculations.
-              </p>
-            </div>
-
-            {/* MCG Membership Fees */}
-            <div className="bg-white p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">MCG Membership Fees</h3>
-              {Object.entries(editingFees?.membershipFees || {}).map(([membershipType, periods]) => (
-                <div key={membershipType} className="mb-6 last:mb-0">
-                  <h4 className="font-medium text-gray-800 mb-3 pb-2 border-b">{membershipType}</h4>
-                  <div className="grid grid-cols-1 gap-3">
-                    {periods.map((period, index) => (
-                      <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded">
-                        <div className="flex-1">
-                          <span className="text-sm text-gray-600">
-                            {new Date(period.start).toLocaleDateString('en-GB')} - {new Date(period.end).toLocaleDateString('en-GB')}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm text-gray-600">£</span>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={period.fee}
-                            onChange={(e) => updateFeeAmount('membershipFees', membershipType, index, e.target.value)}
-                            className="w-20 p-2 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* BCA Membership Fees */}
-            <div className="bg-white p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">BCA Membership Fees</h3>
-              {Object.entries(editingFees?.bcaFees || {}).map(([membershipType, periods]) => (
-                <div key={membershipType} className="mb-6 last:mb-0">
-                  <h4 className="font-medium text-gray-800 mb-3 pb-2 border-b">{membershipType}</h4>
-                  <div className="grid grid-cols-1 gap-3">
-                    {periods.map((period, index) => (
-                      <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded">
-                        <div className="flex-1">
-                          <span className="text-sm text-gray-600">
-                            {new Date(period.start).toLocaleDateString('en-GB')} - {new Date(period.end).toLocaleDateString('en-GB')}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm text-gray-600">£</span>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={period.fee}
-                            onChange={(e) => updateFeeAmount('bcaFees', membershipType, index, e.target.value)}
-                            className="w-20 p-2 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-              <h4 className="font-semibold text-yellow-800 mb-2">Important Notes</h4>
-              <ul className="text-sm text-yellow-700 space-y-1">
-                <li>• Changes take effect immediately after saving</li>
-                <li>• Fees are pro-rated based on join date within the specified periods</li>
-                <li>• All amounts should be in GBP (£)</li>
-                <li>• Use "Reset to Default" to restore original fee structure</li>
-                <li>• Custom fees are stored locally on this device</li>
-              </ul>
-            </div>
-          </div>
-        );
-
-        const AdminScreen = () => (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-3">
-                <button onClick={handleAdminLogout} className="text-blue-600 hover:text-blue-800">
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-                <h2 className="text-xl font-bold">
-                  {showFeeEditor ? 'Fee Management' : 'Transaction Management'}
-                </h2>
-              </div>
-              <button
-                onClick={handleAdminLogout}
-                className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
-                title="Logout"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
-            </div>
-
-            {showFeeEditor ? (
-              <FeeEditorScreen />
-            ) : (
-              <>
-                <div className="bg-white p-6 rounded-lg border">
-                  <h3 className="text-lg font-semibold mb-4">System Management</h3>
-                  <div className="grid grid-cols-1 gap-3">
-                    <button
-                      onClick={startEditingFees}
-                      className="p-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2"
-                    >
-                      <Calculator className="w-5 h-5" />
-                      <span>Manage Membership Fees</span>
-                    </button>
-                    <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
-                      {customFees ? 'Custom fees are active' : 'Using default fees'}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-lg border">
-                  <h3 className="text-lg font-semibold mb-4">Export Data</h3>
-                  <div className="grid grid-cols-1 gap-3">
-                    <button
-                      onClick={exportToCSV}
-                      className="p-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
-                    >
-                      <FileText className="w-5 h-5" />
-                      <span>Export to CSV (Excel)</span>
-                    </button>
-                    <button
-                      onClick={exportTransactions}
-                      className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                    >
-                      <Download className="w-5 h-5" />
-                      <span>Export to JSON (Backup)</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-lg border">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">Recent Transactions ({transactions.length})</h3>
-                    {transactions.length > 0 && (
-                      <button
-                        onClick={clearAllData}
-                        className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        <span>Clear All</span>
-                      </button>
-                    )}
-                  </div>
-
-                  {transactions.length === 0 ? (
-                    <p className="text-gray-500 italic">No transactions recorded yet.</p>
-                  ) : (
-                    <div className="space-y-3 max-h-96 overflow-y-auto">
-                      {transactions.slice(-10).reverse().map((transaction) => (
-                        <div key={transaction.id} className="border rounded-lg p-4 bg-gray-50">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="font-semibold">{transaction.transactionNumber || transaction.id}</p>
-                              <p className="text-sm text-gray-600">{transaction.names.join(', ')}</p>
-                              <p className="text-sm text-gray-600">{transaction.type.replace('-', ' ')}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-semibold">£{transaction.amount.toFixed(2)}</p>
-                              <p className="text-sm text-gray-600">{transaction.paymentMethod}</p>
-                              <p className={`text-sm px-2 py-1 rounded text-white ${
-                                transaction.status === 'completed' ? 'bg-green-600' :
-                                transaction.status === 'pending' ? 'bg-yellow-600' :
-                                transaction.status === 'failed' ? 'bg-red-600' :
-                                'bg-gray-600'
-                              }`}>
-                                {transaction.status}
-                              </p>
-                            </div>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-2">
-                            {new Date(transaction.date).toLocaleString('en-GB')}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                  <h4 className="font-semibold text-yellow-800 mb-2">Data Storage</h4>
-                  <p className="text-sm text-yellow-700">
-                    All transaction data and custom fees are stored locally on this device. Export regularly for backup.
-                    Data will persist until manually cleared or browser storage is reset.
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-        );
-
-        const DetailsScreen = () => (
-          <div className="space-y-6">
-            <div className="flex items-center space-x-3 mb-6">
-              <button onClick={() => {
-                setCurrentStep('main');
-                setPaymentError(null);
-              }} className="text-blue-600 hover:text-blue-800">
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-              <h2 className="text-xl font-bold capitalize">{paymentType.replace('-', ' ')}</h2>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-4">
-                {paymentType === 'donation' ? 'Names or Donation type' : `Names ${paymentType !== 'day-fees' ? '*' : ''}`}
-              </h3>
-              <div className="space-y-3">
-                {formData.names.map((name, index) => (
-                  <div key={`${paymentType}-name-input-${index}`} className="flex items-center space-x-2">
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => updateName(index, e.target.value)}
-                      placeholder={
-                        paymentType === 'donation' 
-                          ? `Social, Kitchen Box, Shower Box, etc. ${index + 1}`
-                          : paymentType === 'day-fees' 
-                            ? `Name ${index + 1} (optional)` 
-                            : `Name ${index + 1} *`
-                      }
-                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required={paymentType !== 'day-fees' && paymentType !== 'donation'}
-                      autoComplete="off"
-                    />
-                    {formData.names.length > 1 && (
-                      <button
-                        onClick={() => removeName(index)}
-                        className="p-2 text-red-600 hover:text-red-800"
-                        type="button"
-                      >
-                        <Minus className="w-5 h-5" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  onClick={addName}
-                  className="flex items-center space-x-2 text-blue-600 hover:text-blue-800"
-                  type="button"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add another name</span>
-                </button>
-              </div>
-            </div>
-
-            {paymentType === 'bed-nights' && (
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Bed Night Details</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="bg-orange-50 p-3 rounded-lg border border-orange-200">
-                    <p className="text-sm text-orange-800">
-                      🔥 <strong>Important:</strong> Please also complete the 'Overnight Stay & Fire Register' form by the front door in full upon arrival.
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Check-in Date *</label>
-                    <input
-                      type="date"
-                      value={formData.bedNights.checkIn}
-                      onChange={(e) => {
-                        const newCheckIn = e.target.value;
-                        const nights = calculateNights(newCheckIn, formData.bedNights.checkOut);
-                        setFormData(prev => ({
-                          ...prev,
-                          bedNights: { ...prev.bedNights, checkIn: newCheckIn, nights }
-                        }));
-                      }}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Check-out Date *</label>
-                    <input
-                      type="date"
-                      value={formData.bedNights.checkOut}
-                      onChange={(e) => {
-                        const newCheckOut = e.target.value;
-                        const nights = calculateNights(formData.bedNights.checkIn, newCheckOut);
-                        setFormData(prev => ({
-                          ...prev,
-                          bedNights: { ...prev.bedNights, checkOut: newCheckOut, nights }
-                        }));
-                      }}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Members</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={formData.bedNights.members}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          bedNights: { ...prev.bedNights, members: parseInt(e.target.value) || 0 }
-                        }))}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Guests</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={formData.bedNights.guests}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          bedNights: { ...prev.bedNights, guests: parseInt(e.target.value) || 0 }
-                        }))}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
-                  {formData.bedNights.nights > 0 && (formData.bedNights.members > 0 || formData.bedNights.guests > 0) && (
-                    <div className="bg-blue-50 p-3 rounded-lg">
-                      <p className="text-sm text-blue-800">
-                        {formData.bedNights.members > 0 && `${formData.bedNights.members} members × ${formData.bedNights.nights} nights × £${rates.bedNight.member} = £${(formData.bedNights.members * formData.bedNights.nights * rates.bedNight.member).toFixed(2)}`}
-                        {formData.bedNights.members > 0 && formData.bedNights.guests > 0 && <br />}
-                        {formData.bedNights.guests > 0 && `${formData.bedNights.guests} guests × ${formData.bedNights.nights} nights × £${rates.bedNight.guest} = £${(formData.bedNights.guests * formData.bedNights.nights * rates.bedNight.guest).toFixed(2)}`}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {paymentType === 'membership' && (
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Membership Details</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Membership Type *</label>
-                    <select
-                      value={formData.membership.type}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        membership: { ...prev.membership, type: e.target.value }
-                      }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    >
-                      <option value="Probationary">Full/Probationary</option>
-                      <option value="Affiliate">Affiliate</option>
-                      <option value="Under18">Under 18</option>
-                      <option value="Student">Student</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Join Date *</label>
-                    <input
-                      type="date"
-                      value={formData.membership.joinDate}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        membership: { ...prev.membership, joinDate: e.target.value }
-                      }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="hasBCA"
-                        checked={formData.membership.hasBCA}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          membership: { ...prev.membership, hasBCA: e.target.checked }
-                        }))}
-                        className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <label htmlFor="hasBCA" className="text-sm font-medium text-gray-700">
-                        Already has BCA membership (waives BCA fee)
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="wantsKeyFob"
-                        checked={formData.membership.wantsKeyFob}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          membership: { ...prev.membership, wantsKeyFob: e.target.checked }
-                        }))}
-                        className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <label htmlFor="wantsKeyFob" className="text-sm font-medium text-gray-700">
-                        Wants key fob (+£{rates.keyFob})
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="hasPaidKitHire"
-                        checked={formData.membership.hasPaidKitHire}
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          membership: { ...prev.membership, hasPaidKitHire: e.target.checked }
-                        }))}
-                        className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <label htmlFor="hasPaidKitHire" className="text-sm font-medium text-gray-700">
-                        Has paid kit hire (£{Math.abs(rates.kitHireDiscount)} discount)
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {paymentType === 'day-fees' && (
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Day Fee Details</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      💡 <strong>Tip:</strong> Names are optional for day fees - you can leave blank for anonymous usage tracking.
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
-                    <input
-                      type="date"
-                      value={formData.dayFees.date}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        dayFees: { ...prev.dayFees, date: e.target.value }
-                      }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Number of People</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={formData.dayFees.people}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        dayFees: { ...prev.dayFees, people: parseInt(e.target.value) || 1 }
-                      }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      {formData.dayFees.people} × £{rates.dayFee} = £{(formData.dayFees.people * rates.dayFee).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {paymentType === 'donation' && (
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Donation Amount</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      💡 <strong>Tip:</strong> You can specify donation type (Social, Kitchen Box, Shower Box) or donor name - both are optional.
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount (£) *</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.donationAmount}
-                      onChange={(e) => setFormData(prev => ({ ...prev, donationAmount: e.target.value }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {paymentType === 'other-sales' && (
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Sale Details</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      🛍️ <strong>Examples:</strong> T-shirts, auction items, books, merchandise, equipment sales.
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
-                    <input
-                      type="text"
-                      value={formData.otherSales.description}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        otherSales: { ...prev.otherSales, description: e.target.value }
-                      }))}
-                      placeholder="e.g., Red MCG T-shirt (Large), Cave survey book, Auction item #5"
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
-                    <input
-                      type="date"
-                      value={formData.otherSales.date}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        otherSales: { ...prev.otherSales, date: e.target.value }
-                      }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount (£) *</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={formData.otherSales.amount}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        otherSales: { ...prev.otherSales, amount: e.target.value }
-                      }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      Total: £{(parseFloat(formData.otherSales.amount) || 0).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <button
-              onClick={() => {
-                calculateTotal();
-                setCurrentStep('payment');
-                setPaymentError(null);
-              }}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-              disabled={
-                (paymentType !== 'day-fees' && paymentType !== 'donation' && !formData.names[0]?.trim()) ||
-                (paymentType === 'bed-nights' && (!formData.bedNights.checkIn || !formData.bedNights.checkOut || (formData.bedNights.members === 0 && formData.bedNights.guests === 0))) ||
-                (paymentType === 'day-fees' && !formData.dayFees.date) ||
-                (paymentType === 'donation' && (!formData.donationAmount || parseFloat(formData.donationAmount) <= 0)) ||
-                (paymentType === 'other-sales' && (!formData.names[0]?.trim() || !formData.otherSales.description?.trim() || !formData.otherSales.date || !formData.otherSales.amount || parseFloat(formData.otherSales.amount) <= 0))
-              }
-            >
-              <Calculator className="w-5 h-5" />
-              <span>Calculate Total & Continue</span>
-            </button>
-          </div>
-        );
-
-        const PaymentScreen = () => {
-          const membershipBreakdown = paymentType === 'membership' ? (() => {
-            const { feeTable, bcaFeeTable } = getCurrentFeeTables();
-            const joinDate = new Date(formData.membership.joinDate);
-            const membershipType = formData.membership.type;
-
-            let baseFee = getFeeForDate(feeTable[membershipType], joinDate) || 0;
-            let bcaFee = formData.membership.hasBCA ? 0 : (getFeeForDate(bcaFeeTable[membershipType], joinDate) || 0);
-            let keyFobFee = formData.membership.wantsKeyFob ? rates.keyFob : 0;
-            let kitHireDiscount = formData.membership.hasPaidKitHire ? rates.kitHireDiscount : 0;
-
-            return { baseFee, bcaFee, keyFobFee, kitHireDiscount };
-          })() : null;
-
-          return (
-            <div className="space-y-6">
-              <div className="flex items-center space-x-3 mb-6">
-                <button onClick={() => {
-                  setCurrentStep('details');
-                  setPaymentError(null);
-                }} className="text-blue-600 hover:text-blue-800">
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-                <h2 className="text-xl font-bold">Payment</h2>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="capitalize">{paymentType.replace('-', ' ')}</span>
-                    <span className="font-semibold">£{formData.total.toFixed(2)}</span>
-                  </div>
-
-                  {paymentType === 'membership' && membershipBreakdown && (
-                    <div className="text-sm text-gray-600 space-y-1 mt-3 pt-3 border-t">
-                      <div className="flex justify-between">
-                        <span>MCG Membership Fee:</span>
-                        <span>£{membershipBreakdown.baseFee.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>BCA Membership Fee:</span>
-                        <span>£{membershipBreakdown.bcaFee.toFixed(2)}</span>
-                      </div>
-                      {membershipBreakdown.keyFobFee > 0 && (
-                        <div className="flex justify-between">
-                          <span>Key Fob Fee:</span>
-                          <span>£{membershipBreakdown.keyFobFee.toFixed(2)}</span>
-                        </div>
-                      )}
-                      {membershipBreakdown.kitHireDiscount < 0 && (
-                        <div className="flex justify-between">
-                          <span>Kit Hire Discount:</span>
-                          <span>£{membershipBreakdown.kitHireDiscount.toFixed(2)}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="border-t pt-2">
-                    <div className="flex justify-between text-lg font-bold">
-                      <span>Total</span>
-                      <span>£{formData.total.toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg border">
-                <h3 className="text-lg font-semibold mb-4">Payment Method</h3>
-
-                {paymentError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-                    <p className="font-medium">Payment Error</p>
-                    <p className="text-sm">{paymentError}</p>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 gap-4">
-                  <button
-                    onClick={() => handlePayment('sumup')}
-                    disabled={isProcessingPayment}
-                    className={`p-4 border-2 rounded-lg transition-colors flex items-center space-x-3 ${
-                      isProcessingPayment
-                        ? 'border-gray-300 bg-gray-100 cursor-not-allowed'
-                        : 'border-gray-200 hover:border-blue-500 hover:bg-blue-50'
-                    }`}
-                  >
-                    <CreditCard className={`w-6 h-6 ${isProcessingPayment ? 'text-gray-400' : 'text-blue-600'}`} />
-                    <div className="text-left flex-1">
-                      <div className="font-semibold">
-                        {isProcessingPayment ? 'Processing...' : 'Card Payment (SumUp)'}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {isProcessingPayment ? 'Setting up payment...' : 'Pay with debit/credit card'}
-                      </div>
-                    </div>
-                    {isProcessingPayment && (
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => handlePayment('bacs')}
-                    className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center space-x-3"
-                  >
-                    <Building className="w-6 h-6 text-blue-600" />
-                    <div className="text-left">
-                      <div className="font-semibold">Bank Transfer (BACS)</div>
-                      <div className="text-sm text-gray-600">Pay via online banking</div>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => handlePayment('cash')}
-                    className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center space-x-3"
-                  >
-                    <Banknote className="w-6 h-6 text-blue-600" />
-                    <div className="text-left">
-                      <div className="font-semibold">Cash Payment</div>
-                      <div className="text-sm text-gray-600">Pay in person with cash</div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
+        const resetForm = () => {
+          setCurrentStep('main');
+          setPaymentType('');
+          setIsProcessingPayment(false);
+          setPaymentError(null);
+          setFormData({
+            names: [''],
+            bedNights: {
+              checkIn: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+              checkOut: new Date().toISOString().slice(0, 10),
+              nights: 1,
+              members: 1,
+              guests: 0
+            },
+            membership: {
+              type: 'Probationary',
+              joinDate: new Date().toISOString().slice(0, 10),
+              hasBCA: false,
+              wantsKeyFob: false,
+              hasPaidKitHire: false
+            },
+            dayFees: {
+              date: new Date().toISOString().slice(0, 10),
+              people: 1
+            },
+            otherSales: {
+              description: '',
+              date: new Date().toISOString().slice(0, 10),
+              amount: ''
+            },
+            donationAmount: '',
+            total: 0,
+            paymentMethod: '',
+            transactionId: null,
+            checkoutId: null
+          });
         };
-
-        const ConfirmationScreen = () => (
-          <div className="space-y-6">
-            <div className="text-center">
-              <div className="bg-green-100 p-6 rounded-lg mb-6">
-                <Check className="w-12 h-12 text-green-600 mx-auto mb-3" />
-                <h2 className="text-2xl font-bold text-green-800">Payment Recorded</h2>
-                <p className="text-green-700">Transaction has been saved</p>
-              </div>
-
-              {formData.paymentMethod === 'bacs' && (
-                <div className="bg-blue-50 p-6 rounded-lg text-left">
-                  <h3 className="font-semibold text-blue-800 mb-3">Bank Transfer Details</h3>
-                  <div className="space-y-2 text-sm">
-                    <p><strong>Account Name:</strong> Mendip Caving Group</p>
-                    <p><strong>Sort Code:</strong> 12-34-56</p>
-                    <p><strong>Account Number:</strong> 12345678</p>
-                    <p><strong>Reference:</strong> {formData.transactionId}</p>
-                    <p><strong>Amount:</strong> £{formData.total.toFixed(2)}</p>
-                  </div>
-                </div>
-              )}
-
-              {formData.paymentMethod === 'cash' && (
-                <div className="bg-yellow-50 p-6 rounded-lg text-left">
-                  <h3 className="font-semibold text-yellow-800 mb-3">Cash Payment Instructions</h3>
-                  <div className="space-y-3 text-sm text-yellow-700">
-                    <p className="font-medium">Please follow these steps:</p>
-                    <ol className="list-decimal list-inside space-y-2">
-                      <li>Place £{formData.total.toFixed(2)} in cash in an envelope</li>
-                      <li>Mark the envelope with:</li>
-                      <ul className="list-disc list-inside ml-4 space-y-1">
-                        <li><strong>Name:</strong> {formData.names.filter(n => n.trim()).length > 0 ? formData.names.filter(n => n.trim()).join(', ') : (paymentType === 'day-fees' ? 'Anonymous' : paymentType === 'donation' ? 'General Donation' : 'Anonymous')}</li>
-                        <li><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</li>
-                        <li><strong>Transaction #:</strong> {formData.transactionId}</li>
-                      </ul>
-                      <li>Leave the envelope in the designated cash collection area</li>
-                    </ol>
-                    <div className="mt-4 p-3 bg-yellow-100 rounded border border-yellow-200">
-                      <p className="font-semibold text-yellow-900">Your Transaction Number: {formData.transactionId}</p>
-                      <p className="text-xs text-yellow-800 mt-1">Keep this number for your records</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {formData.paymentMethod === 'sumup' && (
-                <div className="bg-green-50 p-6 rounded-lg text-left">
-                  <h3 className="font-semibold text-green-800 mb-3">Card Payment</h3>
-                  <p className="text-sm text-green-700">
-                    Your card payment of £{formData.total.toFixed(2)} has been processed successfully.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={resetForm}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              New Transaction
-            </button>
-          </div>
-        );
 
         // MAIN RENDER
         return (
@@ -2073,16 +1647,70 @@
             <div className="max-w-md mx-auto">
               {showAdmin ? (
                 isAdminAuthenticated ? (
-                  <AdminScreen />
+                  <AdminScreen 
+                    handleAdminLogout={handleAdminLogout}
+                    showFeeEditor={showFeeEditor}
+                    startEditingFees={startEditingFees}
+                    customFees={customFees}
+                    exportToCSV={exportToCSV}
+                    exportTransactions={exportTransactions}
+                    clearAllData={clearAllData}
+                    transactions={transactions}
+                    // Props for FeeEditorScreen
+                    setShowFeeEditor={setShowFeeEditor}
+                    saveFees={saveFees}
+                    editingFees={editingFees}
+                    resetFeesToDefault={resetFeesToDefault}
+                    updateFeeAmount={updateFeeAmount}
+                  />
                 ) : (
-                  <PasswordScreen />
+                  <PasswordScreen
+                    setShowAdmin={setShowAdmin}
+                    passwordInput={passwordInput}
+                    setPasswordInput={setPasswordInput}
+                    passwordError={passwordError}
+                    handlePasswordSubmit={handlePasswordSubmit}
+                  />
                 )
               ) : (
                 <>
-                  {currentStep === 'main' && <MainScreen />}
-                  {currentStep === 'details' && <DetailsScreen />}
-                  {currentStep === 'payment' && <PaymentScreen />}
-                  {currentStep === 'confirmation' && <ConfirmationScreen />}
+                  {currentStep === 'main' && <MainScreen 
+                    rates={rates}
+                    handleAdminAccess={handleAdminAccess}
+                    setPaymentType={setPaymentType}
+                    setCurrentStep={setCurrentStep}
+                    setPaymentError={setPaymentError}
+                  />}
+                  {currentStep === 'details' && <DetailsScreen 
+                    paymentType={paymentType}
+                    formData={formData}
+                    setFormData={setFormData}
+                    rates={rates}
+                    setCurrentStep={setCurrentStep}
+                    setPaymentError={setPaymentError}
+                    updateName={updateName}
+                    addName={addName}
+                    removeName={removeName}
+                    calculateNights={calculateNights}
+                    calculateTotal={calculateTotal}
+                  />}
+                  {currentStep === 'payment' && <PaymentScreen
+                    paymentType={paymentType}
+                    formData={formData}
+                    rates={rates}
+                    paymentError={paymentError}
+                    isProcessingPayment={isProcessingPayment}
+                    handlePayment={handlePayment}
+                    getCurrentFeeTables={getCurrentFeeTables}
+                    getFeeForDate={getFeeForDate}
+                    setCurrentStep={setCurrentStep}
+                    setPaymentError={setPaymentError}
+                  />}
+                  {currentStep === 'confirmation' && <ConfirmationScreen 
+                    formData={formData}
+                    paymentType={paymentType}
+                    resetForm={resetForm}
+                  />}
                 </>
               )}
             </div>
