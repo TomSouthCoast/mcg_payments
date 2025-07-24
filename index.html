@@ -1046,6 +1046,94 @@
         );
       };
 
+      const PaymentDetailsScreen = ({ paymentType, formData, pendingPaymentMethod, setCurrentStep, confirmPayment, cancelPayment }) => (
+        <div className="space-y-6">
+          <div className="flex items-center space-x-3 mb-6">
+            <button onClick={() => {
+              setCurrentStep('payment');
+            }} className="text-blue-600 hover:text-blue-800">
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <h2 className="text-xl font-bold">Payment Details</h2>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg border">
+            <h3 className="text-lg font-semibold mb-4">Transaction Summary</h3>
+            <div className="space-y-2 mb-4">
+              <div className="flex justify-between">
+                <span className="capitalize">{paymentType.replace('-', ' ')}</span>
+                <span className="font-semibold">£{formData.total.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>Names:</span>
+                <span>{formData.names.filter(n => n.trim()).length > 0 ? formData.names.filter(n => n.trim()).join(', ') : (paymentType === 'day-fees' ? 'Anonymous' : paymentType === 'donation' ? 'General Donation' : 'Anonymous')}</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>Payment Method:</span>
+                <span className="capitalize">{pendingPaymentMethod === 'bacs' ? 'Bank Transfer (BACS)' : 'Cash Payment'}</span>
+              </div>
+            </div>
+          </div>
+
+          {pendingPaymentMethod === 'bacs' && (
+            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
+              <h3 className="font-semibold text-blue-800 mb-3">Bank Transfer Details</h3>
+              <div className="space-y-2 text-sm">
+                <p><strong>Account Name:</strong> Mendip Caving Group</p>
+                <p><strong>Sort Code:</strong> 40-44-33</p>
+                <p><strong>Account Number:</strong> 72017776</p>
+                <p><strong>Amount:</strong> £{formData.total.toFixed(2)}</p>
+              </div>
+              <div className="mt-4 p-3 bg-blue-100 rounded border border-blue-300">
+                <p className="text-sm text-blue-800">
+                  <strong>Important:</strong> Please use the transaction reference that will be generated after confirmation for your bank transfer.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {pendingPaymentMethod === 'cash' && (
+            <div className="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
+              <h3 className="font-semibold text-yellow-800 mb-3">Cash Payment Instructions</h3>
+              <div className="space-y-3 text-sm text-yellow-700">
+                <p className="font-medium">Please follow these steps:</p>
+                <ol className="list-decimal list-inside space-y-2">
+                  <li>Place £{formData.total.toFixed(2)} in cash in an envelope</li>
+                  <li>Mark the envelope with the transaction details that will be provided after confirmation</li>
+                  <li>Leave the envelope in the designated cash collection area</li>
+                </ol>
+                <div className="mt-4 p-3 bg-yellow-100 rounded border border-yellow-200">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Note:</strong> Transaction reference and details will be generated after you confirm this payment.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={cancelPayment}
+              className="w-full bg-gray-600 text-white py-3 px-4 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Cancel Transaction
+            </button>
+            <button
+              onClick={confirmPayment}
+              className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Confirm Transaction
+            </button>
+          </div>
+
+          <div className="bg-gray-50 p-4 rounded-lg border">
+            <p className="text-sm text-gray-600 text-center">
+              <strong>Please review the details above carefully.</strong> Once confirmed, the transaction will be recorded and cannot be easily undone.
+            </p>
+          </div>
+        </div>
+      );
+
       const ConfirmationScreen = ({ formData, paymentType, resetForm }) => (
         <div className="space-y-6">
           <div className="text-center">
@@ -1057,37 +1145,27 @@
 
             {formData.paymentMethod === 'bacs' && (
               <div className="bg-blue-50 p-6 rounded-lg text-left">
-                <h3 className="font-semibold text-blue-800 mb-3">Bank Transfer Details</h3>
+                <h3 className="font-semibold text-blue-800 mb-3">Bank Transfer Reminder</h3>
                 <div className="space-y-2 text-sm">
-                  <p><strong>Account Name:</strong> Mendip Caving Group</p>
-                  <p><strong>Sort Code:</strong> 40-44-33</p>
-                  <p><strong>Account Number:</strong> 72017776</p>
                   <p><strong>Reference:</strong> {formData.transactionId}</p>
                   <p><strong>Amount:</strong> £{formData.total.toFixed(2)}</p>
+                  <p className="text-blue-700 mt-2">Please use the reference number above when making your bank transfer.</p>
                 </div>
               </div>
             )}
 
             {formData.paymentMethod === 'cash' && (
               <div className="bg-yellow-50 p-6 rounded-lg text-left">
-                <h3 className="font-semibold text-yellow-800 mb-3">Cash Payment Instructions</h3>
+                <h3 className="font-semibold text-yellow-800 mb-3">Cash Payment Reminder</h3>
                 <div className="space-y-3 text-sm text-yellow-700">
-                  <p className="font-medium">Please follow these steps:</p>
-                  <ol className="list-decimal list-inside space-y-2">
-                    <li>Place £{formData.total.toFixed(2)} in cash in an envelope</li>
-                    <li>Mark the envelope with:</li>
-                    <ul className="list-disc list-inside ml-4 space-y-1">
-                      <li><strong>Name:</strong> {formData.names.filter(n => n.trim()).length > 0 ? formData.names.filter(n => n.trim()).join(', ') : (paymentType === 'day-fees' ? 'Anonymous' : paymentType === 'donation' ? 'General Donation' : 'Anonymous')}</li>
-                      <li><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</li>
-                      <li><strong>Transaction #:</strong> {formData.transactionId}</li>
-                      <li><strong>Type:</strong> {paymentType.replace('-', ' ')}</li>
-                    </ul>
-                    <li>Leave the envelope in the designated cash collection area</li>
-                  </ol>
-                  <div className="mt-4 p-3 bg-yellow-100 rounded border border-yellow-200">
-                    <p className="font-semibold text-yellow-900">Your Transaction Number: {formData.transactionId}</p>
-                    <p className="text-xs text-yellow-800 mt-1">Keep this number for your records</p>
-                  </div>
+                  <p>Please mark your cash envelope with:</p>
+                  <ul className="list-disc list-inside ml-4 space-y-1">
+                    <li><strong>Name:</strong> {formData.names.filter(n => n.trim()).length > 0 ? formData.names.filter(n => n.trim()).join(', ') : (paymentType === 'day-fees' ? 'Anonymous' : paymentType === 'donation' ? 'General Donation' : 'Anonymous')}</li>
+                    <li><strong>Date:</strong> {new Date().toLocaleDateString('en-GB')}</li>
+                    <li><strong>Transaction #:</strong> {formData.transactionId}</li>
+                    <li><strong>Type:</strong> {paymentType.replace('-', ' ')}</li>
+                    <li><strong>Amount:</strong> £{formData.total.toFixed(2)}</li>
+                  </ul>
                 </div>
               </div>
             )}
@@ -1138,6 +1216,7 @@
       const MCGPaymentApp = () => {
         const [currentStep, setCurrentStep] = useState('main');
         const [paymentType, setPaymentType] = useState('');
+        const [pendingPaymentMethod, setPendingPaymentMethod] = useState('');
         const [transactions, setTransactions] = useState([]);
         const [isProcessingPayment, setIsProcessingPayment] = useState(false);
         const [paymentError, setPaymentError] = useState(null);
@@ -1617,6 +1696,43 @@
         };
 
         const handlePayment = (method) => {
+          if (method === 'sumup') {
+            // For SumUp, proceed directly with payment processing
+            const fullTimestamp = Date.now();
+            const shortId = fullTimestamp.toString().slice(-6);
+            const prefix = getTransactionPrefix(paymentType);
+            const transactionId = `${prefix}${shortId}`;
+
+            const transaction = {
+              id: fullTimestamp,
+              transactionNumber: transactionId,
+              date: new Date().toISOString(),
+              type: paymentType,
+              amount: formData.total,
+              paymentMethod: method,
+              names: formData.names.filter(name => name.trim() !== '').length > 0 
+                ? formData.names.filter(name => name.trim() !== '') 
+                : (paymentType === 'day-fees' ? ['Anonymous'] : paymentType === 'donation' ? ['General Donation'] : ['Anonymous']),
+              details: getTransactionDetails(),
+              status: 'pending'
+            };
+
+            setTransactions(prev => [...prev, transaction]);
+            setFormData(prev => ({ ...prev, paymentMethod: method, transactionId }));
+
+            const namesList = formData.names.filter(n => n.trim()).length > 0 
+              ? formData.names.filter(n => n.trim()).join(', ')
+              : (paymentType === 'day-fees' ? 'Anonymous' : paymentType === 'donation' ? 'General Donation' : 'Anonymous');
+            const description = `MCG ${paymentType.replace('-', ' ')} - ${namesList}`;
+            processSumUpPayment(formData.total, transactionId, description);
+          } else {
+            // For BACS and Cash, go to payment details screen
+            setPendingPaymentMethod(method);
+            setCurrentStep('payment-details');
+          }
+        };
+
+        const confirmPayment = () => {
           const fullTimestamp = Date.now();
           const shortId = fullTimestamp.toString().slice(-6);
           const prefix = getTransactionPrefix(paymentType);
@@ -1628,26 +1744,22 @@
             date: new Date().toISOString(),
             type: paymentType,
             amount: formData.total,
-            paymentMethod: method,
+            paymentMethod: pendingPaymentMethod,
             names: formData.names.filter(name => name.trim() !== '').length > 0 
               ? formData.names.filter(name => name.trim() !== '') 
               : (paymentType === 'day-fees' ? ['Anonymous'] : paymentType === 'donation' ? ['General Donation'] : ['Anonymous']),
             details: getTransactionDetails(),
-            status: method === 'sumup' ? 'pending' : 'recorded'
+            status: 'recorded'
           };
 
           setTransactions(prev => [...prev, transaction]);
-          setFormData(prev => ({ ...prev, paymentMethod: method, transactionId }));
+          setFormData(prev => ({ ...prev, paymentMethod: pendingPaymentMethod, transactionId }));
+          setCurrentStep('confirmation');
+        };
 
-          if (method === 'sumup') {
-            const namesList = formData.names.filter(n => n.trim()).length > 0 
-              ? formData.names.filter(n => n.trim()).join(', ')
-              : (paymentType === 'day-fees' ? 'Anonymous' : paymentType === 'donation' ? 'General Donation' : 'Anonymous');
-            const description = `MCG ${paymentType.replace('-', ' ')} - ${namesList}`;
-            processSumUpPayment(formData.total, transactionId, description);
-          } else {
-            setCurrentStep('confirmation');
-          }
+        const cancelPayment = () => {
+          setPendingPaymentMethod('');
+          resetForm();
         };
 
         const getTransactionDetails = () => {
@@ -1693,6 +1805,7 @@
         const resetForm = () => {
           setCurrentStep('main');
           setPaymentType('');
+          setPendingPaymentMethod('');
           setIsProcessingPayment(false);
           setPaymentError(null);
           setFormData({
@@ -1795,6 +1908,14 @@
                     getFeeForDate={getFeeForDate}
                     setCurrentStep={setCurrentStep}
                     setPaymentError={setPaymentError}
+                  />}
+                  {currentStep === 'payment-details' && <PaymentDetailsScreen
+                    paymentType={paymentType}
+                    formData={formData}
+                    pendingPaymentMethod={pendingPaymentMethod}
+                    setCurrentStep={setCurrentStep}
+                    confirmPayment={confirmPayment}
+                    cancelPayment={cancelPayment}
                   />}
                   {currentStep === 'confirmation' && <ConfirmationScreen 
                     formData={formData}
