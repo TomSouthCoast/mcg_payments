@@ -172,7 +172,7 @@
                 <Calendar className="w-6 h-6 text-blue-600" />
                 <span className="text-lg font-semibold">Day Fees</span>
               </div>
-              <p className="text-gray-600 mt-2">£{rates.dayFee} per person per day (showers & kitchen use)</p>
+              <p className="text-gray-600 mt-2">£{rates.dayFee} per person (showers & kitchen use)</p>
             </button>
 
             <button
@@ -187,7 +187,7 @@
                 <Package className="w-6 h-6 text-blue-600" />
                 <span className="text-lg font-semibold">Kit Loan</span>
               </div>
-              <p className="text-gray-600 mt-2">£{rates.kitLoan} per loan (caving equipment rental)</p>
+              <p className="text-gray-600 mt-2">£{rates.kitLoan} per person (caving equipment rental)</p>
             </button>
 
             <button
@@ -519,7 +519,7 @@
 
           <div className="bg-white p-6 rounded-lg border">
             <h3 className="text-lg font-semibold mb-4">
-              {paymentType === 'donation' ? 'Names or Donation type' : paymentType === 'kit-loan' ? 'Name *' : `Names ${paymentType !== 'day-fees' ? '*' : ''}`}
+              {paymentType === 'donation' ? 'Names or Donation type' : paymentType === 'kit-loan' ? 'Names *' : `Names ${paymentType !== 'day-fees' ? '*' : ''}`}
             </h3>
             <div className="space-y-3">
               {formData.names.map((name, index) => (
@@ -533,15 +533,13 @@
                         ? `Social, Kitchen Box, Shower Box, etc. ${index + 1}`
                         : paymentType === 'day-fees' 
                           ? `Name ${index + 1} (optional)` 
-                          : paymentType === 'kit-loan'
-                            ? `Name ${index + 1} *`
-                            : `Name ${index + 1} *`
+                          : `Name ${index + 1} *`
                     }
                     className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required={paymentType !== 'day-fees' && paymentType !== 'donation'}
                     autoComplete="off"
                   />
-                  {formData.names.length > 1 && paymentType !== 'kit-loan' && (
+                  {formData.names.length > 1 && (
                     <button
                       onClick={() => removeName(index)}
                       className="p-2 text-red-600 hover:text-red-800"
@@ -552,16 +550,14 @@
                   )}
                 </div>
               ))}
-              {paymentType !== 'kit-loan' && (
-                <button
-                  onClick={addName}
-                  className="flex items-center space-x-2 text-blue-600 hover:text-blue-800"
-                  type="button"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add another name</span>
-                </button>
-              )}
+              <button
+                onClick={addName}
+                className="flex items-center space-x-2 text-blue-600 hover:text-blue-800"
+                type="button"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add another name</span>
+              </button>
             </div>
           </div>
 
@@ -740,7 +736,7 @@
               <div className="grid grid-cols-1 gap-4">
                 <div className="bg-blue-50 p-3 rounded-lg">
                   <p className="text-sm text-blue-800">
-                    💡 <strong>Tip:</strong> Names are optional for day fees - you can leave blank for anonymous usage tracking.
+                    💡 <strong>Tip:</strong> If you add names above, the fee will be calculated based on the number of names entered. Otherwise, it uses the "Number of People" field below.
                   </p>
                 </div>
                 <div>
@@ -771,7 +767,7 @@
                 </div>
                 <div className="bg-blue-50 p-3 rounded-lg">
                   <p className="text-sm text-blue-800">
-                    {formData.dayFees.people} × £{rates.dayFee} = £{(formData.dayFees.people * rates.dayFee).toFixed(2)}
+                    <strong>Cost Calculation:</strong> {formData.names.filter(n => n.trim()).length || formData.dayFees.people} person(s) × £{rates.dayFee} = £{((formData.names.filter(n => n.trim()).length || formData.dayFees.people) * rates.dayFee).toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -784,7 +780,7 @@
               <div className="grid grid-cols-1 gap-4">
                 <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                   <p className="text-sm text-blue-800">
-                    📦 <strong>Kit Loan Service:</strong> Equipment rental for caving activities. Please ensure all equipment is returned in good condition.
+                    📦 <strong>MCG Kit Loan:</strong> This fee will be deducted from your membership fee should you go on to join the MCG.
                   </p>
                 </div>
                 <div>
@@ -802,12 +798,12 @@
                 </div>
                 <div className="bg-green-50 p-3 rounded-lg border border-green-200">
                   <p className="text-sm text-green-800">
-                    <strong>Fixed Rate:</strong> £{rates.kitLoan} per loan
+                    <strong>Cost Calculation:</strong> {formData.names.filter(n => n.trim()).length || 1} person(s) × £{rates.kitLoan} = £{((formData.names.filter(n => n.trim()).length || 1) * rates.kitLoan).toFixed(2)}
                   </p>
                 </div>
                 <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
                   <p className="text-sm text-yellow-800">
-                    <strong>Important:</strong> All loaned equipment must be returned clean and in good condition. Additional charges may apply for damaged or missing items.
+                    <strong>Important:</strong> All loaned equipment must be returned clean to the drying room or tackle store. Please report any damage or faulty items to an MCG Member.
                   </p>
                 </div>
               </div>
@@ -1559,9 +1555,12 @@
           } else if (paymentType === 'membership') {
             total = calculateMembershipFee();
           } else if (paymentType === 'day-fees') {
-            total = formData.dayFees.people * rates.dayFee;
+            const validNames = formData.names.filter(name => name.trim() !== '').length;
+            const people = validNames > 0 ? validNames : formData.dayFees.people;
+            total = people * rates.dayFee;
           } else if (paymentType === 'kit-loan') {
-            total = rates.kitLoan;
+            const validNames = formData.names.filter(name => name.trim() !== '').length;
+            total = rates.kitLoan * Math.max(1, validNames);
           } else if (paymentType === 'donation') {
             total = parseFloat(formData.donationAmount) || 0;
           } else if (paymentType === 'other-sales') {
