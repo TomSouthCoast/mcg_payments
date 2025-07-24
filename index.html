@@ -23,65 +23,65 @@
     <div id="root"></div>
     
     <script>
-      // PWA Install Prompt Logic
-      let deferredPrompt;
-      const installPrompt = document.getElementById('install-prompt');
-      const installButton = document.getElementById('install-button');
-      const dismissButton = document.getElementById('install-dismiss');
+     // PWA Install Prompt Logic
+     let deferredPrompt;
+     const installPrompt = document.getElementById('install-prompt');
+     const installButton = document.getElementById('install-button');
+     const dismissButton = document.getElementById('install-dismiss');
 
-      // Listen for the beforeinstallprompt event
-      window.addEventListener('beforeinstallprompt', (e) => {
-        console.log('beforeinstallprompt event fired');
-        e.preventDefault();
-        deferredPrompt = e;
-        if (installPrompt) {
-          installPrompt.style.display = 'flex';
-        }
-      });
+     // Listen for the beforeinstallprompt event
+     window.addEventListener('beforeinstallprompt', (e) => {
+       console.log('beforeinstallprompt event fired');
+       e.preventDefault();
+       deferredPrompt = e;
+       if (installPrompt) {
+         installPrompt.style.display = 'flex';
+       }
+     });
 
-      // Handle install button click
-      if (installButton) {
-        installButton.addEventListener('click', async () => {
-          console.log('Install button clicked');
-          if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response to the install prompt: ${outcome}`);
-            deferredPrompt = null;
-            if (installPrompt) {
-              installPrompt.style.display = 'none';
-            }
-          }
-        });
-      }
+     // Handle install button click
+     if (installButton) {
+       installButton.addEventListener('click', async () => {
+         console.log('Install button clicked');
+         if (deferredPrompt) {
+           deferredPrompt.prompt();
+           const { outcome } = await deferredPrompt.userChoice;
+           console.log(`User response to the install prompt: ${outcome}`);
+           deferredPrompt = null;
+           if (installPrompt) {
+             installPrompt.style.display = 'none';
+           }
+         }
+       });
+     }
 
-      // Handle dismiss button click
-      if (dismissButton) {
-        dismissButton.addEventListener('click', () => {
-          console.log('Dismiss button clicked');
-          if (installPrompt) {
-            installPrompt.style.display = 'none';
-          }
-          deferredPrompt = null;
-        });
-      }
+     // Handle dismiss button click
+     if (dismissButton) {
+       dismissButton.addEventListener('click', () => {
+         console.log('Dismiss button clicked');
+         if (installPrompt) {
+           installPrompt.style.display = 'none';
+         }
+         deferredPrompt = null;
+       });
+     }
 
-      // Listen for the appinstalled event
-      window.addEventListener('appinstalled', (evt) => {
-        console.log('App was installed');
-        if (installPrompt) {
-          installPrompt.style.display = 'none';
-        }
-      });
+     // Listen for the appinstalled event
+     window.addEventListener('appinstalled', (evt) => {
+       console.log('App was installed');
+       if (installPrompt) {
+         installPrompt.style.display = 'none';
+       }
+     });
 
-      // Debug manifest loading
-      fetch('/manifest.json')
-        .then(response => {
-          console.log('Manifest fetch status:', response.status);
-          return response.json();
-        })
-        .then(data => console.log('Manifest data:', data))
-        .catch(err => console.error('Manifest fetch error:', err));
+     // Debug manifest loading
+     fetch('/manifest.json')
+       .then(response => {
+         console.log('Manifest fetch status:', response.status);
+         return response.json();
+       })
+       .then(data => console.log('Manifest data:', data))
+       .catch(err => console.error('Manifest fetch error:', err));
     </script>
     
     <script type="text/babel">
@@ -108,6 +108,8 @@
       const Lock = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '🔒');
       const ShoppingCart = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '🛒');
       const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '🚪');
+      const Helmet = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '⛑️');
+
 
       // SCREEN COMPONENTS (MOVED OUTSIDE)
       const MainScreen = ({ rates, handleAdminAccess, setPaymentType, setCurrentStep, setPaymentError }) => (
@@ -172,6 +174,21 @@
                 <span className="text-lg font-semibold">Day Fees</span>
               </div>
               <p className="text-gray-600 mt-2">£{rates.dayFee} per person per day (showers & kitchen use)</p>
+            </button>
+            
+            <button
+              onClick={() => {
+                setPaymentType('kit-loan');
+                setCurrentStep('details');
+                setPaymentError(null);
+              }}
+              className="p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+            >
+              <div className="flex items-center justify-center space-x-3">
+                <Helmet className="w-6 h-6 text-blue-600" />
+                <span className="text-lg font-semibold">Kit Loan</span>
+              </div>
+              <p className="text-gray-600 mt-2">£{rates.kitLoan} per person</p>
             </button>
 
             <button
@@ -758,6 +775,32 @@
             </div>
           )}
 
+          {paymentType === 'kit-loan' && (
+            <div className="bg-white p-6 rounded-lg border">
+              <h3 className="text-lg font-semibold mb-4">Kit Loan Details</h3>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                  <input
+                    type="date"
+                    value={formData.kitLoan.date}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      kitLoan: { ...prev.kitLoan, date: e.target.value }
+                    }))}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    {formData.names.filter(n => n.trim()).length} people × £{rates.kitLoan} = £{(formData.names.filter(n => n.trim()).length * rates.kitLoan).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {paymentType === 'donation' && (
             <div className="bg-white p-6 rounded-lg border">
               <h3 className="text-lg font-semibold mb-4">Donation Amount</h3>
@@ -854,6 +897,7 @@
               (paymentType !== 'day-fees' && paymentType !== 'donation' && !formData.names[0]?.trim()) ||
               (paymentType === 'bed-nights' && (!formData.bedNights.checkIn || !formData.bedNights.checkOut || (formData.bedNights.members === 0 && formData.bedNights.guests === 0))) ||
               (paymentType === 'day-fees' && !formData.dayFees.date) ||
+              (paymentType === 'kit-loan' && !formData.kitLoan.date) ||
               (paymentType === 'donation' && (!formData.donationAmount || parseFloat(formData.donationAmount) <= 0)) ||
               (paymentType === 'other-sales' && (!formData.names[0]?.trim() || !formData.otherSales.description?.trim() || !formData.otherSales.date || !formData.otherSales.amount || parseFloat(formData.otherSales.amount) <= 0))
             }
@@ -1089,6 +1133,9 @@
             date: new Date().toISOString().slice(0, 10),
             people: 1
           },
+          kitLoan: {
+            date: new Date().toISOString().slice(0, 10)
+          },
           otherSales: {
             description: '',
             date: new Date().toISOString().slice(0, 10),
@@ -1163,6 +1210,7 @@
         const rates = {
           bedNight: { member: 5, guest: 7.5 },
           dayFee: 2,
+          kitLoan: 15,
           keyFob: 6,
           kitHireDiscount: -15
         };
@@ -1474,6 +1522,8 @@
             total = calculateMembershipFee();
           } else if (paymentType === 'day-fees') {
             total = formData.dayFees.people * rates.dayFee;
+          } else if (paymentType === 'kit-loan') {
+            total = formData.names.filter(n => n.trim() !== '').length * rates.kitLoan;
           } else if (paymentType === 'donation') {
             total = parseFloat(formData.donationAmount) || 0;
           } else if (paymentType === 'other-sales') {
@@ -1522,6 +1572,7 @@
             case 'bed-nights': return 'B';
             case 'membership': return 'M';
             case 'day-fees': return 'F';
+            case 'kit-loan': return 'K';
             case 'donation': return 'D';
             case 'other-sales': return 'S';
             default: return 'T';
@@ -1585,6 +1636,11 @@
                 date: formData.dayFees.date,
                 people: formData.dayFees.people
               };
+            case 'kit-loan':
+                return {
+                    date: formData.kitLoan.date,
+                    people: formData.names.filter(name => name.trim() !== '').length
+                };
             case 'donation':
               return { amount: formData.donationAmount };
             case 'other-sales':
@@ -1622,6 +1678,9 @@
             dayFees: {
               date: new Date().toISOString().slice(0, 10),
               people: 1
+            },
+            kitLoan: {
+              date: new Date().toISOString().slice(0, 10)
             },
             otherSales: {
               description: '',
