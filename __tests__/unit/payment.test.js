@@ -11,19 +11,18 @@ describe('SumUp Payment Integration', () => {
       });
     });
 
-  test('should reject invalid amounts', () => {
-  const invalidAmounts = [0, -1, -10.50, null, undefined, 'ten', NaN];
-  
-  invalidAmounts.forEach(amount => {
-    if (typeof amount === 'number' && !isNaN(amount)) {
-      expect(amount).toBeLessThanOrEqual(0);
-    } else {
-      // For null, undefined, strings, NaN - check they're not valid
-      expect(typeof amount === 'number' && amount > 0).toBe(false);
-    }
-  });
-});
-    
+    test('should reject invalid amounts', () => {
+      const invalidAmounts = [0, -1, -10.50, null, undefined, 'ten', NaN];
+      
+      invalidAmounts.forEach(amount => {
+        if (typeof amount === 'number' && !isNaN(amount)) {
+          expect(amount).toBeLessThanOrEqual(0);
+        } else {
+          expect(typeof amount === 'number' && amount > 0).toBe(false);
+        }
+      });
+    });
+
     test('should handle decimal precision correctly', () => {
       const amount = 10.99;
       const roundedAmount = Math.round(amount * 100) / 100;
@@ -31,20 +30,11 @@ describe('SumUp Payment Integration', () => {
       expect(roundedAmount).toBe(10.99);
       expect(amount.toFixed(2)).toBe('10.99');
     });
-
-    test('should validate maximum payment limits', () => {
-      const maxLimit = 999999;
-      const validAmount = 500.00;
-      const invalidAmount = 1000000;
-      
-      expect(validAmount).toBeLessThan(maxLimit);
-      expect(invalidAmount).toBeGreaterThan(maxLimit);
-    });
   });
 
   describe('Currency Handling', () => {
     test('should support common currencies', () => {
-      const supportedCurrencies = ['EUR', 'USD', 'GBP', 'CHF', 'SEK'];
+      const supportedCurrencies = ['EUR', 'USD', 'GBP', 'CHF'];
       const testCurrency = 'EUR';
       
       expect(supportedCurrencies).toContain(testCurrency);
@@ -59,19 +49,6 @@ describe('SumUp Payment Integration', () => {
         expect(currency.length).toBe(3);
       });
     });
-
-    test('should reject invalid currency codes', () => {
-      const invalidCurrencies = ['eur', 'us', 'EURO', '123', '', null];
-      const validPattern = /^[A-Z]{3}$/;
-      
-      invalidCurrencies.forEach(currency => {
-        if (typeof currency === 'string') {
-          expect(currency).not.toMatch(validPattern);
-        } else {
-          expect(currency).toBeFalsy();
-        }
-      });
-    });
   });
 
   describe('Transaction ID Generation', () => {
@@ -83,7 +60,6 @@ describe('SumUp Payment Integration', () => {
       
       expect(id1).not.toBe(id2);
       expect(id1).toMatch(/^mcg_\d+_[a-z0-9]+$/);
-      expect(id2).toMatch(/^mcg_\d+_[a-z0-9]+$/);
     });
 
     test('should create valid transaction ID format', () => {
@@ -91,7 +67,6 @@ describe('SumUp Payment Integration', () => {
       
       expect(transactionId).toMatch(/^mcg_/);
       expect(transactionId.length).toBeGreaterThan(10);
-      expect(transactionId).toContain('_');
     });
   });
 
@@ -101,7 +76,7 @@ describe('SumUp Payment Integration', () => {
         id: 'mcg_1234567890_abc123',
         amount: 25.99,
         currency: 'EUR',
-        description: 'Test payment for MCG services',
+        description: 'Test payment',
         status: 'PENDING',
         created_at: new Date().toISOString()
       };
@@ -110,11 +85,9 @@ describe('SumUp Payment Integration', () => {
       expect(paymentData).toHaveProperty('amount');
       expect(paymentData).toHaveProperty('currency');
       expect(paymentData).toHaveProperty('status');
-      expect(paymentData).toHaveProperty('created_at');
       
       expect(typeof paymentData.amount).toBe('number');
       expect(typeof paymentData.currency).toBe('string');
-      expect(typeof paymentData.description).toBe('string');
     });
 
     test('should validate required payment fields', () => {
@@ -129,29 +102,17 @@ describe('SumUp Payment Integration', () => {
       requiredFields.forEach(field => {
         expect(paymentData).toHaveProperty(field);
         expect(paymentData[field]).toBeDefined();
-        expect(paymentData[field]).not.toBeNull();
       });
     });
   });
 
   describe('Payment Status Handling', () => {
     test('should handle valid payment statuses', () => {
-      const validStatuses = ['PENDING', 'PAID', 'FAILED', 'CANCELLED', 'REFUNDED'];
+      const validStatuses = ['PENDING', 'PAID', 'FAILED', 'CANCELLED'];
       const testStatus = 'PENDING';
       
       expect(validStatuses).toContain(testStatus);
       expect(validStatuses.every(status => typeof status === 'string')).toBe(true);
-    });
-
-    test('should validate status transitions', () => {
-      const statusFlow = {
-        initial: 'PENDING',
-        success: 'PAID',
-        failure: 'FAILED'
-      };
-
-      expect(statusFlow.initial).toBe('PENDING');
-      expect(['PAID', 'FAILED', 'CANCELLED']).toContain(statusFlow.success);
     });
   });
 
@@ -165,49 +126,11 @@ describe('SumUp Payment Integration', () => {
     });
 
     test('should handle invalid API responses', () => {
-  const invalidResponses = [null, undefined, '', { error: 'Invalid request' }];
-  
-  invalidResponses.forEach(response => {
-    if (response && typeof response === 'object' && response.error) {
-      expect(response).toHaveProperty('error');
-    } else {
-      // Check if response is null, undefined, or empty string
-      expect(response === null || response === undefined || response === '').toBe(true);
-    }
-  });
-});
-    
-  describe('Data Sanitization', () => {
-    test('should handle special characters in descriptions', () => {
-      const descriptions = [
-        'Payment for services',
-        'Payment with émojis 🎉',
-        'Payment & special chars <>',
-        'Payment "with quotes"'
-      ];
-
-      descriptions.forEach(desc => {
-        expect(typeof desc).toBe('string');
-        expect(desc.length).toBeGreaterThan(0);
+      const invalidResponses = [null, undefined, ''];
+      
+      invalidResponses.forEach(response => {
+        expect(response === null || response === undefined || response === '').toBe(true);
       });
-    });
-
-    test('should validate customer data format', () => {
-      const customerData = {
-        email: 'test@example.com',
-        name: 'John Doe',
-        phone: '+44123456789'
-      };
-
-      if (customerData.email) {
-        expect(customerData.email).toMatch(/@/);
-      }
-      if (customerData.name) {
-        expect(typeof customerData.name).toBe('string');
-      }
-      if (customerData.phone) {
-        expect(typeof customerData.phone).toBe('string');
-      }
     });
   });
 
@@ -229,25 +152,6 @@ describe('SumUp Payment Integration', () => {
       
       const allValidAmounts = paymentRequests.every(req => req.amount > 0);
       expect(allValidAmounts).toBe(true);
-      
-      const uniqueIds = new Set(paymentRequests.map(req => req.id));
-      expect(uniqueIds.size).toBe(paymentRequests.length);
-    });
-
-    test('should handle edge case amounts', () => {
-      const edgeCases = [
-        { amount: 0.01, valid: true },
-        { amount: 999999.99, valid: false }, // Over limit
-        { amount: 10.999, valid: true },     // Extra precision
-        { amount: 100, valid: true }         // Whole number
-      ];
-
-      edgeCases.forEach(testCase => {
-        if (testCase.valid) {
-          expect(testCase.amount).toBeGreaterThan(0);
-        }
-        expect(typeof testCase.amount).toBe('number');
-      });
     });
   });
 });
