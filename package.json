@@ -4,10 +4,28 @@
   "description": "MCG Payment System on Azure",
   "scripts": {
     "build": "echo 'No build step needed for static HTML'",
-    "start": "echo 'Use Azure Static Web Apps for hosting'"
+    "start": "echo 'Use Azure Static Web Apps for hosting'",
+    "test": "jest",
+    "test:unit": "jest --testPathPattern='unit|__tests__' --testPathIgnorePatterns='integration|e2e'",
+    "test:api": "jest --testPathPattern='api|integration'",
+    "test:api:rate-limit": "jest --testPathPattern='rate-limit'",
+    "test:e2e": "jest --testPathPattern='e2e' --runInBand",
+    "test:performance": "jest --testPathPattern='performance' --runInBand",
+    "test:smoke": "jest --testPathPattern='smoke'",
+    "test:load": "jest --testPathPattern='load'",
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --ci --coverage --watchAll=false"
   },
   "dependencies": {
     "@azure/functions": "^4.0.0",
     "@azure/data-tables": "^13.2.2"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "@testing-library/jest-dom": "^5.16.0",
+    "nock": "^13.0.0",
+    "supertest": "^6.3.0",
+    "puppeteer": "^21.0.0"
   }
 }
