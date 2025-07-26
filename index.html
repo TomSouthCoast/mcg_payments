@@ -1621,7 +1621,7 @@
                 return;
 
               } catch (deviceError) {
-                console.log('Device payment failed, falling back to hosted payment:', deviceError.message);
+                console.log('Device payment failed, checking for hosted payment fallback:', deviceError.message);
                 
                 // Clean up device container if it exists
                 const deviceContainer = document.getElementById('sumup-device-container');
@@ -1629,39 +1629,40 @@
                   document.body.removeChild(deviceContainer);
                 }
 
-                // Fall back to hosted payment page
+                // Fall back to hosted payment page if available
                 if (checkoutData.payment_url) {
                   console.log('Redirecting to hosted payment page...');
                   window.location.href = checkoutData.payment_url;
                   return;
                 } else {
-                  throw new Error('No payment URL available for fallback');
+                  // No hosted payment available - graceful fallback
+                  console.log('No hosted payment URL available');
+                  setPaymentError('SumUp Air device not available and online payment not configured. Please use BACS transfer or Cash payment instead.');
+                  setIsProcessingPayment(false);
+                  return;
                 }
               }
             } else {
-              // No device support, go directly to hosted payment
+              // No device support, check for hosted payment URL
               if (checkoutData.payment_url) {
                 console.log('No device support, redirecting to hosted payment...');
                 window.location.href = checkoutData.payment_url;
                 return;
               } else {
-                console.log('Simulating payment completion for testing...');
-                alert(`Payment created! Checkout ID: ${checkoutData.checkout_id}\nAmount: £${amount}\nIn production, this would either use your SumUp Air device or redirect to a secure payment page.`);
+                // No hosted payment URL available - show manual options
+                console.log('No payment URL available, showing manual payment options...');
+                setPaymentError('Online card payment not available. Please use BACS transfer or Cash payment instead, or contact an MCG member to process your card payment manually.');
+                setIsProcessingPayment(false);
+                return;
               }
             }
 
-            // Fallback for testing/simulation
-            setTimeout(() => {
-              setCurrentStep('confirmation');
-              setTransactions(prev =>
-                prev.map((t, i) => i === prev.length - 1 ? {
-                  ...t,
-                  status: 'completed',
-                  transactionId: checkoutData.checkout_id
-                } : t)
-              );
-              setIsProcessingPayment(false);
-            }, 3000);
+            // Debug: Log what we received from SumUp
+            console.log('=== SumUp Response Debug ===');
+            console.log('checkout_id:', checkoutData.checkout_id);
+            console.log('payment_url:', checkoutData.payment_url);
+            console.log('supports_device_payment:', checkoutData.supports_device_payment);
+            console.log('All fields:', Object.keys(checkoutData));
 
           } catch (error) {
             console.error('Payment error details:', error);
@@ -1671,8 +1672,10 @@
               userMessage = 'Unable to connect to payment service. Please try BACS or Cash payment instead.';
             } else if (error.message.includes('JSON')) {
               userMessage = 'Payment service is currently in testing mode. The API returned an unexpected response format.';
-            } else if (error.message.includes('Device')) {
-              userMessage = 'SumUp device unavailable. Please try BACS or Cash payment, or contact an MCG member for assistance.';
+            } else if (error.message.includes('Device') || error.message.includes('SumUp Air')) {
+              userMessage = 'Card payment method not available. Please use BACS transfer or Cash payment instead.';
+            } else if (error.message.includes('payment not configured')) {
+              userMessage = 'Online card payments are not yet configured. Please use BACS transfer or Cash payment.';
             }
             
             setPaymentError(userMessage);
