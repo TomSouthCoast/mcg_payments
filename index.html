@@ -1575,60 +1575,63 @@
               try {
                 console.log('Attempting to open SumUp mobile app...');
                 
-                // Try to open SumUp mobile app directly
-                const appOpened = await new Promise((resolve) => {
-                  // Create hidden iframe to trigger app opening
-                  const iframe = document.createElement('iframe');
-                  iframe.style.display = 'none';
-                  iframe.src = checkoutData.payment_switch_url;
-                  document.body.appendChild(iframe);
+                // Method 1: Direct window location (most reliable)
+                const shouldTryDirect = confirm(`Ready to process £${amount} payment?\n\nThis will open the SumUp mobile app.\n\nCheckout ID: ${checkoutData.checkout_id}\n\nClick OK to open SumUp app, or Cancel to use BACS/Cash instead.`);
+                
+                if (shouldTryDirect) {
+                  console.log('User confirmed - opening SumUp app');
                   
-                  // Clean up iframe after attempt
-                  setTimeout(() => {
-                    if (iframe.parentNode) {
-                      document.body.removeChild(iframe);
-                    }
-                  }, 2000);
+                  // Set transaction to pending first
+                  setTransactions(prev =>
+                    prev.map((t, i) => i === prev.length - 1 ? {
+                      ...t,
+                      status: 'pending_mobile_app',
+                      transactionId: checkoutData.checkout_id
+                    } : t)
+                  );
                   
-                  // Give it 3 seconds to open the app
+                  // Try to open the app with fallback
+                  try {
+                    // First try the custom URL scheme
+                    window.location.href = checkoutData.payment_switch_url;
+                    
+                    // Fallback: if app doesn't open in 3 seconds, try web redirect
+                    setTimeout(() => {
+                      const stillHere = confirm('SumUp app not opening?\n\nClick OK to try alternative method, or Cancel to use BACS/Cash payment.');
+                      if (stillHere && checkoutData.mobile_redirect_url) {
+                        window.location.href = checkoutData.mobile_redirect_url;
+                      } else if (stillHere) {
+                        setPaymentError('SumUp mobile app not available. Please ensure the SumUp app is installed, or use BACS/Cash payment instead.');
+                        setIsProcessingPayment(false);
+                      }
+                    }, 3000);
+                    
+                  } catch (redirectError) {
+                    console.log('Direct redirect failed:', redirectError.message);
+                    setPaymentError('Could not open SumUp app. Please ensure the SumUp app is installed on this device, or use BACS/Cash payment instead.');
+                    setIsProcessingPayment(false);
+                    return;
+                  }
+                  
+                  // Show success message for when they return
                   setTimeout(() => {
-                    resolve(true);
-                  }, 3000);
-                });
-
-                console.log('SumUp app opening attempted');
-                
-                // Show success message and wait for user to return
-                setPaymentError(null);
-                alert(`Opening SumUp app to process £${amount} payment...\n\nCheckout ID: ${checkoutData.checkout_id}\n\nPlease complete the payment in the SumUp app, then return to this screen to confirm.`);
-                
-                // Set status to pending and let user manually confirm
-                setTransactions(prev =>
-                  prev.map((t, i) => i === prev.length - 1 ? {
-                    ...t,
-                    status: 'pending_mobile_app',
-                    transactionId: checkoutData.checkout_id
-                  } : t)
-                );
-                
-                // Show confirmation screen with special message
-                setCurrentStep('confirmation');
-                setIsProcessingPayment(false);
-                return;
-
-              } catch (appError) {
-                console.log('Could not open SumUp app:', appError.message);
-                
-                // Fallback to web redirect
-                if (checkoutData.mobile_redirect_url) {
-                  console.log('Trying web redirect to mobile...');
-                  window.location.href = checkoutData.mobile_redirect_url;
-                  return;
+                    setCurrentStep('confirmation');
+                    setIsProcessingPayment(false);
+                  }, 1000);
+                  
                 } else {
-                  setPaymentError('SumUp mobile app not available. Please ensure the SumUp app is installed on this device, or use BACS/Cash payment instead.');
+                  // User cancelled - reset to payment screen
+                  console.log('User cancelled SumUp app opening');
+                  setPaymentError('Payment cancelled. Please choose BACS transfer or Cash payment instead.');
                   setIsProcessingPayment(false);
                   return;
                 }
+
+              } catch (appError) {
+                console.log('Could not open SumUp app:', appError.message);
+                setPaymentError('SumUp mobile app not available. Please ensure the SumUp app is installed on this device, or use BACS/Cash payment instead.');
+                setIsProcessingPayment(false);
+                return;
               }
             } else {
               // No Payment Switch support
@@ -1641,9 +1644,46 @@
             // Debug: Log what we received from SumUp
             console.log('=== SumUp Response Debug ===');
             console.log('checkout_id:', checkoutData.checkout_id);
-            console.log('payment_url:', checkoutData.payment_url);
-            console.log('supports_device_payment:', checkoutData.supports_device_payment);
+            console.log('payment_switch_url:', checkoutData.payment_switch_url);
+            console.log('mobile_redirect_url:', checkoutData.mobile_redirect_url);
+            console.log('supports_payment_switch:', checkoutData.supports_payment_switch);
             console.log('All fields:', Object.keys(checkoutData));
+
+            // Alternative: Show manual link if automatic opening fails
+            const createManualLink = () => {
+              const linkContainer = document.createElement('div');
+              linkContainer.innerHTML = `
+                <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                           background: white; padding: 20px; border: 2px solid #2563eb; border-radius: 8px; 
+                           box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 10000; max-width: 400px; text-align: center;">
+                  <h3 style="margin: 0 0 15px 0; color: #2563eb;">SumUp Payment</h3>
+                  <p style="margin: 0 0 15px 0;">Checkout ID: ${checkoutData.checkout_id}</p>
+                  <p style="margin: 0 0 20px 0;">Amount: £${amount}</p>
+                  <a href="${checkoutData.payment_switch_url}" 
+                     style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; 
+                            text-decoration: none; border-radius: 6px; margin: 5px;">
+                    📱 Open SumUp App
+                  </a>
+                  <br/>
+                  <a href="${checkoutData.mobile_redirect_url}" 
+                     style="display: inline-block; background: #059669; color: white; padding: 12px 24px; 
+                            text-decoration: none; border-radius: 6px; margin: 5px;">
+                    🌐 Web Payment
+                  </a>
+                  <br/>
+                  <button onclick="this.parentElement.parentElement.remove()" 
+                          style="background: #dc2626; color: white; padding: 8px 16px; border: none; 
+                                 border-radius: 4px; margin-top: 10px; cursor: pointer;">
+                    Cancel
+                  </button>
+                </div>
+              `;
+              document.body.appendChild(linkContainer);
+            };
+
+            // Show manual links
+            createManualLink();
+            setIsProcessingPayment(false);
 
           } catch (error) {
             console.error('Payment error details:', error);
