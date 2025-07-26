@@ -1644,46 +1644,9 @@
             // Debug: Log what we received from SumUp
             console.log('=== SumUp Response Debug ===');
             console.log('checkout_id:', checkoutData.checkout_id);
-            console.log('payment_switch_url:', checkoutData.payment_switch_url);
-            console.log('mobile_redirect_url:', checkoutData.mobile_redirect_url);
-            console.log('supports_payment_switch:', checkoutData.supports_payment_switch);
+            console.log('payment_url:', checkoutData.payment_url);
+            console.log('supports_device_payment:', checkoutData.supports_device_payment);
             console.log('All fields:', Object.keys(checkoutData));
-
-            // Alternative: Show manual link if automatic opening fails
-            const createManualLink = () => {
-              const linkContainer = document.createElement('div');
-              linkContainer.innerHTML = `
-                <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-                           background: white; padding: 20px; border: 2px solid #2563eb; border-radius: 8px; 
-                           box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 10000; max-width: 400px; text-align: center;">
-                  <h3 style="margin: 0 0 15px 0; color: #2563eb;">SumUp Payment</h3>
-                  <p style="margin: 0 0 15px 0;">Checkout ID: ${checkoutData.checkout_id}</p>
-                  <p style="margin: 0 0 20px 0;">Amount: £${amount}</p>
-                  <a href="${checkoutData.payment_switch_url}" 
-                     style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; 
-                            text-decoration: none; border-radius: 6px; margin: 5px;">
-                    📱 Open SumUp App
-                  </a>
-                  <br/>
-                  <a href="${checkoutData.mobile_redirect_url}" 
-                     style="display: inline-block; background: #059669; color: white; padding: 12px 24px; 
-                            text-decoration: none; border-radius: 6px; margin: 5px;">
-                    🌐 Web Payment
-                  </a>
-                  <br/>
-                  <button onclick="this.parentElement.parentElement.remove()" 
-                          style="background: #dc2626; color: white; padding: 8px 16px; border: none; 
-                                 border-radius: 4px; margin-top: 10px; cursor: pointer;">
-                    Cancel
-                  </button>
-                </div>
-              `;
-              document.body.appendChild(linkContainer);
-            };
-
-            // Show manual links
-            createManualLink();
-            setIsProcessingPayment(false);
 
           } catch (error) {
             console.error('Payment error details:', error);
