@@ -10,7 +10,6 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://gateway.sumup.com/gateway/ecom/card/v2/sdk.js"></script>
 </head>
 <body>
     <div id="install-prompt" style="display: none; position: fixed; bottom: 1rem; left: 1rem; right: 1rem; background-color: white; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); align-items: center; justify-content: space-between; z-index: 1000;">
@@ -1009,10 +1008,10 @@
                   <CreditCard className={`w-6 h-6 ${isProcessingPayment ? 'text-gray-400' : 'text-blue-600'}`} />
                   <div className="text-left flex-1">
                     <div className="font-semibold">
-                      {isProcessingPayment ? 'Processing...' : 'Card Payment'}
+                      {isProcessingPayment ? 'Opening SumUp App...' : 'Card Payment (SumUp App)'}
                     </div>
                     <div className="text-sm text-gray-600">
-                      {isProcessingPayment ? 'Trying device, then secure online...' : 'SumUp Air device or secure online payment'}
+                      {isProcessingPayment ? 'Launching SumUp mobile app...' : 'Opens SumUp app for card processing'}
                     </div>
                   </div>
                   {isProcessingPayment && (
@@ -1175,8 +1174,14 @@
               <div className="bg-green-50 p-6 rounded-lg text-left">
                 <h3 className="font-semibold text-green-800 mb-3">Card Payment</h3>
                 <p className="text-sm text-green-700">
-                  Your card payment of £{formData.total.toFixed(2)} has been processed successfully.
+                  Your card payment of £{formData.total.toFixed(2)} has been processed via SumUp app.
                 </p>
+                <div className="mt-4 p-3 bg-blue-100 rounded border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    <strong>Transaction ID:</strong> {formData.transactionId}<br/>
+                    <strong>Please verify:</strong> Check that the payment was completed successfully in the SumUp app.
+                  </p>
+                </div>
                 {paymentType === 'kit-loan' && (
                   <div className="mt-4 p-3 bg-blue-100 rounded border border-blue-200">
                     <p className="text-sm text-blue-800">
@@ -1565,96 +1570,72 @@
 
             console.log('Checkout data:', checkoutData);
 
-            // Try SumUp Air device first (if available)
-            if (window.SumUpCard && checkoutData.supports_device_payment) {
+            // Try SumUp Payment Switch (opens SumUp mobile app)
+            if (checkoutData.supports_payment_switch && checkoutData.payment_switch_url) {
               try {
-                console.log('Attempting SumUp Air device payment...');
+                console.log('Attempting to open SumUp mobile app...');
                 
-                // Create a container for SumUp device UI
-                const deviceContainer = document.createElement('div');
-                deviceContainer.id = 'sumup-device-container';
-                deviceContainer.style.display = 'none';
-                document.body.appendChild(deviceContainer);
-
-                // Try to initialize device payment
-                const devicePayment = await new Promise((resolve, reject) => {
-                  const timeout = setTimeout(() => {
-                    reject(new Error('Device connection timeout'));
-                  }, 5000); // 5 second timeout
-
-                  try {
-                    SumUpCard.mount({
-                      id: 'sumup-device-container',
-                      checkoutId: checkoutData.checkout_id,
-                      onResponse: function(type, body) {
-                        clearTimeout(timeout);
-                        if (type === 'success') {
-                          resolve(body);
-                        } else {
-                          reject(new Error('Device payment failed'));
-                        }
-                      },
-                      onError: function(error) {
-                        clearTimeout(timeout);
-                        reject(new Error('Device error: ' + error));
-                      }
-                    });
-                  } catch (sdkError) {
-                    clearTimeout(timeout);
-                    reject(new Error('SDK not available'));
-                  }
+                // Try to open SumUp mobile app directly
+                const appOpened = await new Promise((resolve) => {
+                  // Create hidden iframe to trigger app opening
+                  const iframe = document.createElement('iframe');
+                  iframe.style.display = 'none';
+                  iframe.src = checkoutData.payment_switch_url;
+                  document.body.appendChild(iframe);
+                  
+                  // Clean up iframe after attempt
+                  setTimeout(() => {
+                    if (iframe.parentNode) {
+                      document.body.removeChild(iframe);
+                    }
+                  }, 2000);
+                  
+                  // Give it 3 seconds to open the app
+                  setTimeout(() => {
+                    resolve(true);
+                  }, 3000);
                 });
 
-                // Device payment successful
-                console.log('Device payment successful:', devicePayment);
-                document.body.removeChild(deviceContainer);
+                console.log('SumUp app opening attempted');
                 
-                setCurrentStep('confirmation');
+                // Show success message and wait for user to return
+                setPaymentError(null);
+                alert(`Opening SumUp app to process £${amount} payment...\n\nCheckout ID: ${checkoutData.checkout_id}\n\nPlease complete the payment in the SumUp app, then return to this screen to confirm.`);
+                
+                // Set status to pending and let user manually confirm
                 setTransactions(prev =>
                   prev.map((t, i) => i === prev.length - 1 ? {
                     ...t,
-                    status: 'completed',
+                    status: 'pending_mobile_app',
                     transactionId: checkoutData.checkout_id
                   } : t)
                 );
+                
+                // Show confirmation screen with special message
+                setCurrentStep('confirmation');
                 setIsProcessingPayment(false);
                 return;
 
-              } catch (deviceError) {
-                console.log('Device payment failed, checking for hosted payment fallback:', deviceError.message);
+              } catch (appError) {
+                console.log('Could not open SumUp app:', appError.message);
                 
-                // Clean up device container if it exists
-                const deviceContainer = document.getElementById('sumup-device-container');
-                if (deviceContainer) {
-                  document.body.removeChild(deviceContainer);
-                }
-
-                // Fall back to hosted payment page if available
-                if (checkoutData.payment_url) {
-                  console.log('Redirecting to hosted payment page...');
-                  window.location.href = checkoutData.payment_url;
+                // Fallback to web redirect
+                if (checkoutData.mobile_redirect_url) {
+                  console.log('Trying web redirect to mobile...');
+                  window.location.href = checkoutData.mobile_redirect_url;
                   return;
                 } else {
-                  // No hosted payment available - graceful fallback
-                  console.log('No hosted payment URL available');
-                  setPaymentError('SumUp Air device not available and online payment not configured. Please use BACS transfer or Cash payment instead.');
+                  setPaymentError('SumUp mobile app not available. Please ensure the SumUp app is installed on this device, or use BACS/Cash payment instead.');
                   setIsProcessingPayment(false);
                   return;
                 }
               }
             } else {
-              // No device support, check for hosted payment URL
-              if (checkoutData.payment_url) {
-                console.log('No device support, redirecting to hosted payment...');
-                window.location.href = checkoutData.payment_url;
-                return;
-              } else {
-                // No hosted payment URL available - show manual options
-                console.log('No payment URL available, showing manual payment options...');
-                setPaymentError('Online card payment not available. Please use BACS transfer or Cash payment instead, or contact an MCG member to process your card payment manually.');
-                setIsProcessingPayment(false);
-                return;
-              }
+              // No Payment Switch support
+              console.log('Payment Switch not available');
+              setPaymentError('Card payment requires the SumUp mobile app to be installed on this device. Please use BACS transfer or Cash payment instead.');
+              setIsProcessingPayment(false);
+              return;
             }
 
             // Debug: Log what we received from SumUp
