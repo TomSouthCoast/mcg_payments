@@ -1008,10 +1008,10 @@
                   <CreditCard className={`w-6 h-6 ${isProcessingPayment ? 'text-gray-400' : 'text-blue-600'}`} />
                   <div className="text-left flex-1">
                     <div className="font-semibold">
-                      {isProcessingPayment ? 'Opening SumUp App...' : 'Card Payment (SumUp App)'}
+                      {isProcessingPayment ? 'Opening Merchant App...' : 'Card Payment (SumUp POS)'}
                     </div>
                     <div className="text-sm text-gray-600">
-                      {isProcessingPayment ? 'Launching SumUp mobile app...' : 'Opens SumUp app for card processing'}
+                      {isProcessingPayment ? 'Launching SumUp merchant app...' : 'Opens SumUp merchant app for card processing'}
                     </div>
                   </div>
                   {isProcessingPayment && (
@@ -1174,12 +1174,12 @@
               <div className="bg-green-50 p-6 rounded-lg text-left">
                 <h3 className="font-semibold text-green-800 mb-3">Card Payment</h3>
                 <p className="text-sm text-green-700">
-                  Your card payment of £{formData.total.toFixed(2)} has been processed via SumUp app.
+                  Your card payment of £{formData.total.toFixed(2)} has been processed via SumUp merchant app.
                 </p>
                 <div className="mt-4 p-3 bg-blue-100 rounded border border-blue-200">
                   <p className="text-sm text-blue-800">
                     <strong>Transaction ID:</strong> {formData.transactionId}<br/>
-                    <strong>Please verify:</strong> Check that the payment was completed successfully in the SumUp app.
+                    <strong>Please verify:</strong> Check that the payment was completed successfully in the SumUp merchant app.
                   </p>
                 </div>
                 {paymentType === 'kit-loan' && (
@@ -1570,45 +1570,85 @@
 
             console.log('Checkout data:', checkoutData);
 
-            // Try SumUp Payment Switch (opens SumUp mobile app)
-            if (checkoutData.supports_payment_switch && checkoutData.payment_switch_url) {
+            // Debug: Log what we received from SumUp
+            console.log('=== SumUp Response Debug ===');
+            console.log('checkout_id:', checkoutData.checkout_id);
+            console.log('merchant_app_url:', checkoutData.merchant_app_url);
+            console.log('merchant_alt_url:', checkoutData.merchant_alt_url);
+            console.log('supports_merchant_app:', checkoutData.supports_merchant_app);
+            console.log('All fields:', Object.keys(checkoutData));
+
+            // Check if we got an error response
+            if (checkoutData.error) {
+              throw new Error(`Worker error: ${checkoutData.error}`);
+            }
+
+            // Try SumUp Merchant App (for tablet/POS processing)
+            if (checkoutData.supports_merchant_app && checkoutData.merchant_app_url) {
               try {
-                console.log('Attempting to open SumUp mobile app...');
+                console.log('Attempting to open SumUp Merchant app...');
                 
-                // Method 1: Direct window location (most reliable)
-                const shouldTryDirect = confirm(`Ready to process £${amount} payment?\n\nThis will open the SumUp mobile app.\n\nCheckout ID: ${checkoutData.checkout_id}\n\nClick OK to open SumUp app, or Cancel to use BACS/Cash instead.`);
+                // Direct approach for merchant app
+                const shouldTryMerchant = confirm(`Ready to process £${amount} card payment?\n\nThis will open the SumUp Merchant app.\n\nCheckout ID: ${checkoutData.checkout_id}\n\nClick OK to open merchant app, or Cancel to use BACS/Cash instead.`);
                 
-                if (shouldTryDirect) {
-                  console.log('User confirmed - opening SumUp app');
+                if (shouldTryMerchant) {
+                  console.log('User confirmed - opening SumUp Merchant app');
                   
                   // Set transaction to pending first
                   setTransactions(prev =>
                     prev.map((t, i) => i === prev.length - 1 ? {
                       ...t,
-                      status: 'pending_mobile_app',
+                      status: 'pending_merchant_app',
                       transactionId: checkoutData.checkout_id
                     } : t)
                   );
                   
-                  // Try to open the app with fallback
+                  // Try merchant app schemes
                   try {
-                    // First try the custom URL scheme
-                    window.location.href = checkoutData.payment_switch_url;
+                    // Primary merchant app URL
+                    window.location.href = checkoutData.merchant_app_url;
                     
-                    // Fallback: if app doesn't open in 3 seconds, try web redirect
+                    // Fallback: try alternative merchant URL after delay
                     setTimeout(() => {
-                      const stillHere = confirm('SumUp app not opening?\n\nClick OK to try alternative method, or Cancel to use BACS/Cash payment.');
-                      if (stillHere && checkoutData.mobile_redirect_url) {
-                        window.location.href = checkoutData.mobile_redirect_url;
+                      const stillHere = confirm('Merchant app not opening?\n\nClick OK to try alternative method, or Cancel to use BACS/Cash payment.');
+                      if (stillHere && checkoutData.merchant_alt_url) {
+                        window.location.href = checkoutData.merchant_alt_url;
                       } else if (stillHere) {
-                        setPaymentError('SumUp mobile app not available. Please ensure the SumUp app is installed, or use BACS/Cash payment instead.');
+                        // Show manual checkout processing option
+                        const manualProcess = confirm(`Manual Processing Option:\n\nCheckout ID: ${checkoutData.checkout_id}\nAmount: £${amount}\n\nYou can manually enter this checkout ID in your SumUp app to process the payment.\n\nClick OK if payment completed, or Cancel to use BACS/Cash.`);
+                        if (manualProcess) {
+                          setCurrentStep('confirmation');
+                          setTransactions(prev =>
+                            prev.map((t, i) => i === prev.length - 1 ? {
+                              ...t,
+                              status: 'completed_manual',
+                              transactionId: checkoutData.checkout_id
+                            } : t)
+                          );
+                        } else {
+                          setPaymentError('Card processing cancelled. Please use BACS transfer or Cash payment instead.');
+                        }
                         setIsProcessingPayment(false);
                       }
                     }, 3000);
                     
                   } catch (redirectError) {
-                    console.log('Direct redirect failed:', redirectError.message);
-                    setPaymentError('Could not open SumUp app. Please ensure the SumUp app is installed on this device, or use BACS/Cash payment instead.');
+                    console.log('Merchant app redirect failed:', redirectError.message);
+                    
+                    // Manual processing fallback
+                    const manualProcess = confirm(`Merchant app not available.\n\nManual Processing:\nCheckout ID: ${checkoutData.checkout_id}\nAmount: £${amount}\n\nYou can manually process this in your SumUp app.\n\nClick OK if payment completed, or Cancel for BACS/Cash.`);
+                    if (manualProcess) {
+                      setCurrentStep('confirmation');
+                      setTransactions(prev =>
+                        prev.map((t, i) => i === prev.length - 1 ? {
+                          ...t,
+                          status: 'completed_manual',
+                          transactionId: checkoutData.checkout_id
+                        } : t)
+                      );
+                    } else {
+                      setPaymentError('Card processing cancelled. Please use BACS transfer or Cash payment instead.');
+                    }
                     setIsProcessingPayment(false);
                     return;
                   }
@@ -1621,22 +1661,22 @@
                   
                 } else {
                   // User cancelled - reset to payment screen
-                  console.log('User cancelled SumUp app opening');
-                  setPaymentError('Payment cancelled. Please choose BACS transfer or Cash payment instead.');
+                  console.log('User cancelled merchant app opening');
+                  setPaymentError('Card payment cancelled. Please choose BACS transfer or Cash payment instead.');
                   setIsProcessingPayment(false);
                   return;
                 }
 
               } catch (appError) {
-                console.log('Could not open SumUp app:', appError.message);
-                setPaymentError('SumUp mobile app not available. Please ensure the SumUp app is installed on this device, or use BACS/Cash payment instead.');
+                console.log('Could not open SumUp Merchant app:', appError.message);
+                setPaymentError('SumUp Merchant app not available. Please ensure the SumUp POS app is installed on this device, or use BACS/Cash payment instead.');
                 setIsProcessingPayment(false);
                 return;
               }
             } else {
-              // No Payment Switch support
-              console.log('Payment Switch not available');
-              setPaymentError('Card payment requires the SumUp mobile app to be installed on this device. Please use BACS transfer or Cash payment instead.');
+              // No Merchant app support
+              console.log('Merchant app processing not available');
+              setPaymentError('Card payment requires the SumUp Merchant app to be installed on this device. Please use BACS transfer or Cash payment instead.');
               setIsProcessingPayment(false);
               return;
             }
@@ -1644,8 +1684,9 @@
             // Debug: Log what we received from SumUp
             console.log('=== SumUp Response Debug ===');
             console.log('checkout_id:', checkoutData.checkout_id);
-            console.log('payment_url:', checkoutData.payment_url);
-            console.log('supports_device_payment:', checkoutData.supports_device_payment);
+            console.log('merchant_app_url:', checkoutData.merchant_app_url);
+            console.log('merchant_alt_url:', checkoutData.merchant_alt_url);
+            console.log('supports_merchant_app:', checkoutData.supports_merchant_app);
             console.log('All fields:', Object.keys(checkoutData));
 
           } catch (error) {
