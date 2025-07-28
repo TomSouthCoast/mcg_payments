@@ -111,19 +111,9 @@
       const LogOut = (props) => React.createElement('span', {style: {fontSize: '24px', ...props.style}}, '🚪');
 
       // SCREEN COMPONENTS (MOVED OUTSIDE)
-      const MainScreen = ({ rates, handleAdminAccess, setPaymentType, setCurrentStep, setPaymentError }) => {
-        const isChrome = /chrome/i.test(navigator.userAgent);
-        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-        
-        return (
-          <div className="space-y-6">
-            {isChrome && !isSafari && (
-              <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg text-sm">
-                <p><strong>💡 Tip:</strong> For best card payment compatibility, consider using Safari browser on this device.</p>
-              </div>
-            )}
-            
-            <div className="text-center">
+      const MainScreen = ({ rates, handleAdminAccess, setPaymentType, setCurrentStep, setPaymentError }) => (
+        <div className="space-y-6">
+          <div className="text-center">
             <div className="text-white p-4 rounded-lg mb-6 relative" style={{backgroundColor: '#270393'}}>
               <button
                 onClick={handleAdminAccess}
@@ -231,8 +221,7 @@
             </button>
           </div>
         </div>
-        );
-      };
+      );
 
       const PasswordScreen = ({ setShowAdmin, passwordInput, setPasswordInput, passwordError, handlePasswordSubmit }) => (
         <div className="space-y-6">
@@ -1584,11 +1573,9 @@
             // Debug: Log what we received from SumUp
             console.log('=== SumUp Response Debug ===');
             console.log('checkout_id:', checkoutData.checkout_id);
-            console.log('android_intent_url:', checkoutData.android_intent_url);
-            console.log('android_intent_alt:', checkoutData.android_intent_alt);
             console.log('merchant_app_url:', checkoutData.merchant_app_url);
+            console.log('merchant_alt_url:', checkoutData.merchant_alt_url);
             console.log('supports_merchant_app:', checkoutData.supports_merchant_app);
-            console.log('supports_android_intent:', checkoutData.supports_android_intent);
             console.log('All fields:', Object.keys(checkoutData));
 
             // Check if we got an error response
@@ -1601,16 +1588,8 @@
               try {
                 console.log('Attempting to open SumUp Merchant app...');
                 
-                // Direct approach for merchant app - prefer Safari
-                const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-                const isChrome = /chrome/i.test(navigator.userAgent);
-                
-                let browserMessage = '';
-                if (isChrome && !isSafari) {
-                  browserMessage = '\n\nNote: Chrome detected - Safari may work better for opening merchant apps.';
-                }
-                
-                const shouldTryMerchant = confirm(`Ready to process £${amount} card payment?${browserMessage}\n\nThis will open the SumUp Merchant app.\n\nCheckout ID: ${checkoutData.checkout_id}\n\nClick OK to open merchant app, or Cancel to use BACS/Cash instead.`);
+                // Direct approach for merchant app
+                const shouldTryMerchant = confirm(`Ready to process £${amount} card payment?\n\nThis will open the SumUp Merchant app.\n\nCheckout ID: ${checkoutData.checkout_id}\n\nClick OK to open merchant app, or Cancel to use BACS/Cash instead.`);
                 
                 if (shouldTryMerchant) {
                   console.log('User confirmed - opening SumUp Merchant app');
@@ -1690,77 +1669,8 @@
 
               } catch (appError) {
                 console.log('Could not open SumUp Merchant app:', appError.message);
-                
-                // Show manual link options instead of just error
-                const showManualLinks = confirm(`Automatic app opening failed.\n\nWould you like to try manual links instead?\n\n(Note: Safari works better than Chrome for opening apps)\n\nClick OK to show clickable links, or Cancel for BACS/Cash payment.`);
-                
-                if (showManualLinks) {
-                  // Create manual link overlay
-                  const linkOverlay = document.createElement('div');
-                  const browserInfo = isChrome && !isSafari ? 
-                    '<p style="margin: 0 0 15px 0; color: #dc2626; font-size: 14px; background: #fef2f2; padding: 8px; border-radius: 4px;"><strong>⚠️ Chrome detected:</strong> If links don\'t work, try opening this page in Safari instead.</p>' : '';
-                  
-                  linkOverlay.innerHTML = `
-                  linkOverlay.innerHTML = `
-                    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-                               background: rgba(0,0,0,0.8); z-index: 10000; 
-                               display: flex; align-items: center; justify-content: center;">
-                      <div style="background: white; padding: 30px; border-radius: 12px; 
-                                 max-width: 500px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
-                        <h3 style="margin: 0 0 20px 0; color: #2563eb; font-size: 24px;">
-                          📱 Open SumUp Merchant App
-                        </h3>
-                        ${browserInfo}
-                        <p style="margin: 0 0 15px 0; color: #666;">
-                          <strong>Checkout ID:</strong> ${checkoutData.checkout_id}<br/>
-                          <strong>Amount:</strong> £${amount}
-                        </p>
-                        <p style="margin: 0 0 25px 0; color: #666; font-size: 14px;">
-                          Click one of these links to open the SumUp app:
-                        </p>
-                        <div style="margin: 0 0 25px 0;">
-                          <a href="${checkoutData.merchant_app_url}" 
-                             style="display: block; background: #2563eb; color: white; padding: 15px 20px; 
-                                    text-decoration: none; border-radius: 8px; margin: 8px 0; font-weight: bold;">
-                            📱 Primary: Open Merchant App
-                          </a>
-                          <a href="${checkoutData.merchant_alt_url}" 
-                             style="display: block; background: #059669; color: white; padding: 15px 20px; 
-                                    text-decoration: none; border-radius: 8px; margin: 8px 0; font-weight: bold;">
-                            📱 Alternative: Open Merchant App
-                          </a>
-                          <a href="${checkoutData.mobile_redirect_url}" 
-                             style="display: block; background: #7c3aed; color: white; padding: 15px 20px; 
-                                    text-decoration: none; border-radius: 8px; margin: 8px 0; font-weight: bold;">
-                            🌐 Web Fallback
-                          </a>
-                        </div>
-                        <div style="margin-top: 20px;">
-                          <button onclick="this.parentElement.parentElement.parentElement.remove(); 
-                                          document.querySelector('.processing-button').disabled = false;" 
-                                  style="background: #dc2626; color: white; padding: 10px 20px; border: none; 
-                                         border-radius: 6px; margin: 5px; cursor: pointer;">
-                            ❌ Cancel & Use BACS/Cash
-                          </button>
-                          <button onclick="this.parentElement.parentElement.parentElement.remove(); 
-                                          window.location.href = '/confirmation';" 
-                                  style="background: #16a34a; color: white; padding: 10px 20px; border: none; 
-                                         border-radius: 6px; margin: 5px; cursor: pointer;">
-                            ✅ Payment Completed
-                          </button>
-                        </div>
-                        <p style="margin: 15px 0 0 0; font-size: 12px; color: #999;">
-                          If links don't work: Install <strong>SumUp for Business</strong> or <strong>SumUp POS</strong> app (not regular SumUp app). Use Safari browser for best compatibility.
-                        </p>
-                      </div>
-                    </div>
-                  `;
-                  document.body.appendChild(linkOverlay);
-                  setIsProcessingPayment(false);
-                } else {
-                  setPaymentError('Card processing cancelled. Please use BACS transfer or Cash payment instead.');
-                  setIsProcessingPayment(false);
-                }
+                setPaymentError('SumUp Merchant app not available. Please ensure the SumUp POS app is installed on this device, or use BACS/Cash payment instead.');
+                setIsProcessingPayment(false);
                 return;
               }
             } else {
