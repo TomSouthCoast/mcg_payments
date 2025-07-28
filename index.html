@@ -1526,7 +1526,7 @@
           }
         };
 
-        // NEW SIMPLIFIED SUMUP PAYMENT FUNCTION WITH INTENT SCHEME
+        // NEW SIMPLIFIED SUMUP PAYMENT FUNCTION WITH INTENT SCHEME - UPDATED WITH CORRECT PACKAGE NAMES
         const processSumUpPayment = async (amount, reference, description) => {
           setIsProcessingPayment(true);
           setPaymentError(null);
@@ -1543,11 +1543,6 @@
               // Clean the description for URL encoding
               const cleanTitle = encodeURIComponent(description.replace(/[^a-zA-Z0-9\s]/g, '').trim());
               
-              // Construct the intent URL with your specific parameters
-              const intentUrl = `intent://pay/1.0?total=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}&receipt=false#Intent;scheme=sumupmerchant;package=com.sumup.merchant;end;`;
-              
-              console.log('Opening SumUp with intent:', intentUrl);
-              
               // Set transaction to pending first
               setTransactions(prev =>
                 prev.map((t, i) => i === prev.length - 1 ? {
@@ -1557,39 +1552,81 @@
                 } : t)
               );
 
+              // Multiple intent URLs to try - different package names for different SumUp apps
+              const intentUrls = [
+                // Main SumUp app (correct package name from Google Play)
+                `intent://pay/1.0?total=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}&receipt=false#Intent;scheme=sumupmerchant;package=com.kaching.merchant;end;`,
+                // Alternative package names that might exist
+                `intent://pay/1.0?total=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}&receipt=false#Intent;scheme=sumupmerchant;package=com.sumup.merchant;end;`,
+                `intent://pay/1.0?total=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}&receipt=false#Intent;scheme=sumupmerchant;package=com.sumup.pos;end;`,
+                `intent://pay/1.0?total=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}&receipt=false#Intent;scheme=sumupmerchant;package=com.sumup;end;`
+              ];
+
               // Confirm with user before opening
-              const confirmed = confirm(`Ready to process £${amount.toFixed(2)} payment?\n\nThis will open the SumUp Merchant app.\n\nTransaction: ${reference}\n\nClick OK to continue.`);
+              const confirmed = confirm(`Ready to process £${amount.toFixed(2)} payment?\n\nThis will try to open the SumUp app.\n\nTransaction: ${reference}\n\nClick OK to continue.`);
               
               if (confirmed) {
-                try {
-                  // Try to open the intent URL
-                  window.location.href = intentUrl;
-                  
-                  // Give user feedback and options
-                  setTimeout(() => {
-                    const appOpened = confirm('Did the SumUp Merchant app open successfully?\n\nClick OK if the payment was completed, or Cancel to try an alternative method.');
+                let appOpened = false;
+                
+                // Try each intent URL
+                for (let i = 0; i < intentUrls.length && !appOpened; i++) {
+                  try {
+                    console.log(`Trying SumUp intent ${i + 1}:`, intentUrls[i]);
                     
-                    if (appOpened) {
-                      // User confirms payment was completed
-                      setCurrentStep('confirmation');
-                      setTransactions(prev =>
-                        prev.map((t, i) => i === prev.length - 1 ? {
-                          ...t,
-                          status: 'completed',
-                          transactionId: reference
-                        } : t)
-                      );
-                    } else {
-                      // Fallback to manual or other methods
-                      setPaymentError('SumUp Merchant app not available. Please use BACS transfer or Cash payment instead.');
+                    // Try to open the intent URL
+                    window.location.href = intentUrls[i];
+                    
+                    // Wait a moment then check with user
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    const userResponse = confirm(`Attempt ${i + 1}: Did the SumUp app open?\n\nClick OK if the app opened successfully, or Cancel to try next method.`);
+                    
+                    if (userResponse) {
+                      appOpened = true;
+                      console.log(`SumUp app opened successfully with intent ${i + 1}`);
+                      
+                      // Ask for payment confirmation
+                      setTimeout(() => {
+                        const paymentCompleted = confirm('Did you complete the payment in the SumUp app?\n\nClick OK if payment was successful, or Cancel to use BACS/Cash instead.');
+                        
+                        if (paymentCompleted) {
+                          setCurrentStep('confirmation');
+                          setTransactions(prev =>
+                            prev.map((t, i) => i === prev.length - 1 ? {
+                              ...t,
+                              status: 'completed',
+                              transactionId: reference
+                            } : t)
+                          );
+                        } else {
+                          setPaymentError('Payment not completed in SumUp app. Please use BACS transfer or Cash payment instead.');
+                        }
+                        setIsProcessingPayment(false);
+                      }, 2000);
+                      
+                      return; // Exit the function as we found a working intent
                     }
-                    setIsProcessingPayment(false);
-                  }, 3000);
-                  
-                } catch (intentError) {
-                  console.error('Intent scheme failed:', intentError);
-                  throw new Error('Could not open SumUp Merchant app. Please ensure the SumUp Merchant app is installed.');
+                    
+                  } catch (intentError) {
+                    console.log(`Intent ${i + 1} failed:`, intentError);
+                    // Continue to next intent
+                  }
                 }
+                
+                // If we get here, none of the intents worked
+                if (!appOpened) {
+                  const installApp = confirm('SumUp app not found.\n\nWould you like to install the SumUp app from Google Play?\n\nClick OK to open Google Play, or Cancel to use BACS/Cash payment.');
+                  
+                  if (installApp) {
+                    // Open Google Play to install SumUp app
+                    window.location.href = 'https://play.google.com/store/apps/details?id=com.kaching.merchant';
+                    setPaymentError('Please install the SumUp app and try again, or use BACS transfer or Cash payment.');
+                  } else {
+                    setPaymentError('SumUp app not available. Please use BACS transfer or Cash payment instead.');
+                  }
+                  setIsProcessingPayment(false);
+                }
+                
               } else {
                 // User cancelled
                 setPaymentError('Payment cancelled. Please choose BACS transfer or Cash payment instead.');
@@ -1643,7 +1680,7 @@
             // Desktop or unknown platform - suggest alternatives
             else {
               console.log('Desktop or unknown platform detected');
-              setPaymentError('Card payments require the SumUp Merchant app on a mobile device. Please use BACS transfer or Cash payment instead.');
+              setPaymentError('Card payments require the SumUp app on a mobile device. Please use BACS transfer or Cash payment instead.');
               setIsProcessingPayment(false);
             }
 
