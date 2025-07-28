@@ -1552,14 +1552,25 @@
                 } : t)
               );
 
-              // Multiple intent URLs to try - different package names for different SumUp apps
+              // Multiple intent URLs to try - now with your affiliate key
+              const affiliateKey = 'c7be114e-18c5-4aed-9668-e8760e5cbab7';
+              const appId = 'com.mcg.sumup'; // or whatever you put in the SumUp developer portal
+              
               const intentUrls = [
-                // Main SumUp app (correct package name from Google Play)
-                `intent://pay/1.0?total=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}&receipt=false#Intent;scheme=sumupmerchant;package=com.kaching.merchant;end;`,
-                // Alternative package names that might exist
-                `intent://pay/1.0?total=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}&receipt=false#Intent;scheme=sumupmerchant;package=com.sumup.merchant;end;`,
-                `intent://pay/1.0?total=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}&receipt=false#Intent;scheme=sumupmerchant;package=com.sumup.pos;end;`,
-                `intent://pay/1.0?total=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}&receipt=false#Intent;scheme=sumupmerchant;package=com.sumup;end;`
+                // Primary: Full SumUp intent with affiliate key and app ID
+                `sumupmerchant://pay/1.0?affiliate-key=${affiliateKey}&app-id=${appId}&total=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}`,
+                
+                // Alternative with different parameter names
+                `sumupmerchant://pay/1.0?affiliate-key=${affiliateKey}&app-id=${appId}&amount=${amount.toFixed(2)}&currency=GBP&description=${cleanTitle}`,
+                
+                // Simplified version without app-id
+                `sumupmerchant://pay/1.0?affiliate-key=${affiliateKey}&total=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}`,
+                
+                // Your original intent format with affiliate key
+                `intent://pay/1.0?affiliate-key=${affiliateKey}&app-id=${appId}&total=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}&receipt=false#Intent;scheme=sumupmerchant;package=com.kaching.merchant;end;`,
+                
+                // Fallback to Play Store if nothing works
+                'market://details?id=com.kaching.merchant'
               ];
 
               // Confirm with user before opening
