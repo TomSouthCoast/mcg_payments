@@ -1536,30 +1536,41 @@
           }
         };
 
-        // --- MODIFIED SECTION 2: REPLACED THE SUMUP PAYMENT FUNCTION ---
-        const processSumUpPayment = async (amount, reference, description) => {
-            setIsProcessingPayment(true);
-            setPaymentError(null);
+       // --- MODIFIED SECTION: REPLACED THE SUMUP PAYMENT FUNCTION ---
+const processSumUpPayment = async (amount, reference, description) => {
+    setIsProcessingPayment(true);
+    setPaymentError(null);
 
-            // --- Step 1: Define your callback URL ---
-            // ❗️IMPORTANT: Replace this with your actual public Cloudflare Pages URL
-            const callbackUrl = 'https://mcg-payments.pages.dev/';
+    // ❗️IMPORTANT: Replace this with your actual public Cloudflare Pages URL
+    const callbackUrl = 'https://mcg-payments.pages.dev/';
 
-            // --- Step 2: Set transaction to 'pending' (already handled in handlePayment) ---
+    const affiliateKey = 'c7be114e-18c5-4aed-9668-e8760e5cbab7';
+    const cleanTitle = encodeURIComponent(description);
 
-            // --- Step 3: Construct the correct SumUp URL ---
-            const affiliateKey = 'c7be114e-18c5-4aed-9668-e8760e5cbab7';
-            const cleanTitle = encodeURIComponent(description);
+    // Construct the base payment URL with all its parameters
+    const paymentParams = `?affiliate-key=${affiliateKey}&amount=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}&foreign-tx-id=${reference}&callback=${encodeURIComponent(callbackUrl)}`;
+    const baseSumupUrl = `sumup-pos://pay/1.0${paymentParams}`;
 
-            // The 'foreign-tx-id' is crucial for matching the transaction on return
-            const sumupUrl = `sumup-pos://pay/1.0?affiliate-key=${affiliateKey}&amount=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}&foreign-tx-id=${reference}&callback=${encodeURIComponent(callbackUrl)}`;
-            
-            console.log("Redirecting to SumUp URL:", sumupUrl);
+    let finalUrl;
+    const isAndroid = /android/i.test(navigator.userAgent);
 
-            // --- Step 4: Redirect to the SumUp URL ---
-            window.location.href = sumupUrl;
-        };
+    if (isAndroid) {
+        console.log("Android device detected. Using intent: URL.");
+        // This syntax is specific to Android.
+        // It tries to open the app via its package name and provides a fallback link.
+        const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.sumup.pos';
+        
+        finalUrl = `intent://pay/1.0${paymentParams}#Intent;scheme=sumup-pos;package=com.sumup.pos;S.browser_fallback_url=${encodeURIComponent(playStoreUrl)};end;`;
 
+    } else {
+        console.log("Non-Android (iOS) device detected. Using standard URL scheme.");
+        // This is the standard method that works for iOS.
+        finalUrl = baseSumupUrl;
+    }
+    
+    console.log("Redirecting to final URL:", finalUrl);
+    window.location.href = finalUrl;
+};
 
         // Calculation functions
         const getFeeForDate = (feeArray, date) => {
