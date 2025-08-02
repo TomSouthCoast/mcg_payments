@@ -1536,7 +1536,7 @@
           }
         };
 
-       // --- MODIFIED SECTION: REPLACED THE SUMUP PAYMENT FUNCTION ---
+      // --- UPDATED ANDROID INTENT: Targets the main SumUp app package ---
 const processSumUpPayment = async (amount, reference, description) => {
     setIsProcessingPayment(true);
     setPaymentError(null);
@@ -1547,31 +1547,29 @@ const processSumUpPayment = async (amount, reference, description) => {
     const affiliateKey = 'c7be114e-18c5-4aed-9668-e8760e5cbab7';
     const cleanTitle = encodeURIComponent(description);
 
-    // Construct the base payment URL with all its parameters
     const paymentParams = `?affiliate-key=${affiliateKey}&amount=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}&foreign-tx-id=${reference}&callback=${encodeURIComponent(callbackUrl)}`;
-    const baseSumupUrl = `sumup-pos://pay/1.0${paymentParams}`;
-
+    
     let finalUrl;
     const isAndroid = /android/i.test(navigator.userAgent);
 
     if (isAndroid) {
-        console.log("Android device detected. Using intent: URL.");
-        // This syntax is specific to Android.
-        // It tries to open the app via its package name and provides a fallback link.
-        const playStoreUrl = 'https://play.google.com/store/apps/details?id=com.sumup.pos';
+        console.log("Android device detected. Using intent: URL to target main SumUp App.");
         
-        finalUrl = `intent://pay/1.0${paymentParams}#Intent;scheme=sumup-pos;package=com.sumup.pos;S.browser_fallback_url=${encodeURIComponent(playStoreUrl)};end;`;
+        // This version targets the main SumUp app package name, which is often more common.
+        const mainAppPackage = 'com.kaching.merchant';
+        const playStoreUrl = `https://play.google.com/store/apps/details?id=${mainAppPackage}`;
+        
+        finalUrl = `intent://pay/1.0${paymentParams}#Intent;scheme=sumup-pos;package=${mainAppPackage};S.browser_fallback_url=${encodeURIComponent(playStoreUrl)};end;`;
 
     } else {
         console.log("Non-Android (iOS) device detected. Using standard URL scheme.");
         // This is the standard method that works for iOS.
-        finalUrl = baseSumupUrl;
+        finalUrl = `sumup-pos://pay/1.0${paymentParams}`;
     }
     
     console.log("Redirecting to final URL:", finalUrl);
     window.location.href = finalUrl;
 };
-
         // Calculation functions
         const getFeeForDate = (feeArray, date) => {
           for (let entry of feeArray) {
