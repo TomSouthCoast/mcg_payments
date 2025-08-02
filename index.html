@@ -1417,24 +1417,70 @@
           }));
         };
 
-        // Load and save data
+        // // --- MODIFIED SECTION 1: ADDED SUMUP CALLBACK LOGIC ---
         useEffect(() => {
-          try {
-            const savedTransactions = JSON.parse(localStorage.getItem('mcg_transactions') || '[]');
-            setTransactions(savedTransactions);
-          } catch (error) {
-            console.error('Error loading transactions:', error);
-            setTransactions([]);
-          }
+            // Check for a return from SumUp
+            const urlParams = new URLSearchParams(window.location.search);
+            const sumupStatus = urlParams.get('smp-status');
+            const sumupTxCode = urlParams.get('smp-tx-code'); // The official SumUp transaction code
+            const ourTxId = urlParams.get('foreign-tx-id'); // The reference you sent
+
+            const allTransactions = JSON.parse(localStorage.getItem('mcg_transactions') || '[]');
+
+            if (sumupStatus && ourTxId) {
+                // We have a return from SumUp. Find the matching transaction and update it.
+                const updatedTransactions = allTransactions.map(t => {
+                    if (t.transactionNumber === ourTxId) {
+                        return {
+                            ...t,
+                            status: sumupStatus === 'success' ? 'completed' : 'failed',
+                            details: { ...t.details, sumupTxCode: sumupTxCode }
+                        };
+                    }
+                    return t;
+                });
+                
+                localStorage.setItem('mcg_transactions', JSON.stringify(updatedTransactions));
+                setTransactions(updatedTransactions);
+
+                // Navigate to the correct screen
+                if (sumupStatus === 'success') {
+                    const successfulTx = updatedTransactions.find(t => t.transactionNumber === ourTxId);
+                    if (successfulTx) {
+                        setFormData(prev => ({ ...prev, ...successfulTx, paymentMethod: 'sumup', transactionId: successfulTx.transactionNumber }));
+                        setPaymentType(successfulTx.type);
+                        setCurrentStep('confirmation');
+                    }
+                } else {
+                    setPaymentError(`Payment failed or was cancelled in the SumUp app. (Status: ${sumupStatus})`);
+                    const failedTx = allTransactions.find(t => t.transactionNumber === ourTxId);
+                    if (failedTx) {
+                        setFormData(prev => ({ ...prev, total: failedTx.amount }));
+                        setPaymentType(failedTx.type);
+                    }
+                    setCurrentStep('payment');
+                }
+
+                // Clean the URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                // Normal page load
+                setTransactions(allTransactions);
+            }
         }, []);
 
+        // Save transactions to localStorage whenever they change
         useEffect(() => {
-          try {
-            localStorage.setItem('mcg_transactions', JSON.stringify(transactions));
-          } catch (error) {
-            console.error('Error saving transactions:', error);
+          // Only save if there are transactions to avoid overwriting on initial load before state is set
+          if (transactions.length > 0) {
+            try {
+              localStorage.setItem('mcg_transactions', JSON.stringify(transactions));
+            } catch (error) {
+              console.error('Error saving transactions:', error);
+            }
           }
         }, [transactions]);
+
 
         useEffect(() => {
           if (customFees) {
@@ -1490,217 +1536,30 @@
           }
         };
 
-        // Payment handling
-        useEffect(() => {
-          const urlParams = new URLSearchParams(window.location.search);
-          const checkoutId = urlParams.get('checkout_id');
-          const status = urlParams.get('status');
-
-          if (checkoutId) {
-            handlePaymentReturn(checkoutId, status);
-            window.history.replaceState({}, '', window.location.pathname);
-          }
-        }, []);
-
-        const handlePaymentReturn = async (checkoutId, status) => {
-          try {
-            if (status === 'success') {
-              setCurrentStep('confirmation');
-              setTransactions(prev =>
-                prev.map((t, i) => i === prev.length - 1 ? {
-                  ...t,
-                  status: 'completed',
-                  checkoutId
-                } : t)
-              );
-            } else if (status === 'cancelled') {
-              setPaymentError('Payment was cancelled. Please try again.');
-              setCurrentStep('payment');
-            } else {
-              setPaymentError('Payment failed. Please try again or use an alternative payment method.');
-              setCurrentStep('payment');
-            }
-          } catch (error) {
-            setPaymentError('Error processing payment return. Please contact support.');
-            setCurrentStep('payment');
-          }
-        };
-
-        // NEW SIMPLIFIED SUMUP PAYMENT FUNCTION WITH INTENT SCHEME - UPDATED WITH CORRECT PACKAGE NAMES
+        // --- MODIFIED SECTION 2: REPLACED THE SUMUP PAYMENT FUNCTION ---
         const processSumUpPayment = async (amount, reference, description) => {
-          setIsProcessingPayment(true);
-          setPaymentError(null);
+            setIsProcessingPayment(true);
+            setPaymentError(null);
 
-          try {
-            // Check if we're on Android and can use the direct intent scheme
-            const isAndroid = /android/i.test(navigator.userAgent);
-            const isMobile = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent);
+            // --- Step 1: Define your callback URL ---
+            // ❗️IMPORTANT: Replace this with your actual public Cloudflare Pages URL
+            const callbackUrl = 'https://mcg-payments.pages.dev/';
 
-            // Direct Android Intent Scheme (your preferred method)
-            if (isAndroid) {
-              console.log('Android detected - using direct SumUp intent scheme');
-              
-              // Clean the description for URL encoding
-              const cleanTitle = encodeURIComponent(description.replace(/[^a-zA-Z0-9\s]/g, '').trim());
-              
-              // Set transaction to pending first
-              setTransactions(prev =>
-                prev.map((t, i) => i === prev.length - 1 ? {
-                  ...t,
-                  status: 'pending_sumup_intent',
-                  transactionId: reference
-                } : t)
-              );
+            // --- Step 2: Set transaction to 'pending' (already handled in handlePayment) ---
 
-              // Multiple intent URLs to try - now with your affiliate key
-              const affiliateKey = 'c7be114e-18c5-4aed-9668-e8760e5cbab7';
-              const appId = 'com.mcg.sumup'; // or whatever you put in the SumUp developer portal
-              
-              const intentUrls = [
-                // Primary: Full SumUp intent with affiliate key and app ID
-                `sumupmerchant://pay/1.0?affiliate-key=${affiliateKey}&app-id=${appId}&total=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}`,
-                
-                // Alternative with different parameter names
-                `sumupmerchant://pay/1.0?affiliate-key=${affiliateKey}&app-id=${appId}&amount=${amount.toFixed(2)}&currency=GBP&description=${cleanTitle}`,
-                
-                // Simplified version without app-id
-                `sumupmerchant://pay/1.0?affiliate-key=${affiliateKey}&total=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}`,
-                
-                // Your original intent format with affiliate key
-                `intent://pay/1.0?affiliate-key=${affiliateKey}&app-id=${appId}&total=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}&receipt=false#Intent;scheme=sumupmerchant;package=com.kaching.merchant;end;`,
-                
-                // Fallback to Play Store if nothing works
-                'market://details?id=com.kaching.merchant'
-              ];
+            // --- Step 3: Construct the correct SumUp URL ---
+            const affiliateKey = 'c7be114e-18c5-4aed-9668-e8760e5cbab7';
+            const cleanTitle = encodeURIComponent(description);
 
-              // Confirm with user before opening
-              const confirmed = confirm(`Ready to process £${amount.toFixed(2)} payment?\n\nThis will try to open the SumUp app.\n\nTransaction: ${reference}\n\nClick OK to continue.`);
-              
-              if (confirmed) {
-                let appOpened = false;
-                
-                // Try each intent URL
-                for (let i = 0; i < intentUrls.length && !appOpened; i++) {
-                  try {
-                    console.log(`Trying SumUp intent ${i + 1}:`, intentUrls[i]);
-                    
-                    // Try to open the intent URL
-                    window.location.href = intentUrls[i];
-                    
-                    // Wait a moment then check with user
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    
-                    const userResponse = confirm(`Attempt ${i + 1}: Did the SumUp app open?\n\nClick OK if the app opened successfully, or Cancel to try next method.`);
-                    
-                    if (userResponse) {
-                      appOpened = true;
-                      console.log(`SumUp app opened successfully with intent ${i + 1}`);
-                      
-                      // Ask for payment confirmation
-                      setTimeout(() => {
-                        const paymentCompleted = confirm('Did you complete the payment in the SumUp app?\n\nClick OK if payment was successful, or Cancel to use BACS/Cash instead.');
-                        
-                        if (paymentCompleted) {
-                          setCurrentStep('confirmation');
-                          setTransactions(prev =>
-                            prev.map((t, i) => i === prev.length - 1 ? {
-                              ...t,
-                              status: 'completed',
-                              transactionId: reference
-                            } : t)
-                          );
-                        } else {
-                          setPaymentError('Payment not completed in SumUp app. Please use BACS transfer or Cash payment instead.');
-                        }
-                        setIsProcessingPayment(false);
-                      }, 2000);
-                      
-                      return; // Exit the function as we found a working intent
-                    }
-                    
-                  } catch (intentError) {
-                    console.log(`Intent ${i + 1} failed:`, intentError);
-                    // Continue to next intent
-                  }
-                }
-                
-                // If we get here, none of the intents worked
-                if (!appOpened) {
-                  const installApp = confirm('SumUp app not found.\n\nWould you like to install the SumUp app from Google Play?\n\nClick OK to open Google Play, or Cancel to use BACS/Cash payment.');
-                  
-                  if (installApp) {
-                    // Open Google Play to install SumUp app
-                    window.location.href = 'https://play.google.com/store/apps/details?id=com.kaching.merchant';
-                    setPaymentError('Please install the SumUp app and try again, or use BACS transfer or Cash payment.');
-                  } else {
-                    setPaymentError('SumUp app not available. Please use BACS transfer or Cash payment instead.');
-                  }
-                  setIsProcessingPayment(false);
-                }
-                
-              } else {
-                // User cancelled
-                setPaymentError('Payment cancelled. Please choose BACS transfer or Cash payment instead.');
-                setIsProcessingPayment(false);
-                return;
-              }
-            } 
-            // Fallback for iOS and other platforms
-            else if (isMobile) {
-              console.log('Non-Android mobile detected - trying alternative schemes');
-              
-              // Try alternative schemes for iOS or other mobile platforms
-              const schemes = [
-                `sumupmerchant://pay/1.0?total=${amount.toFixed(2)}&currency=GBP&title=${encodeURIComponent(description)}&receipt=false`,
-                `sumup://pay?amount=${amount.toFixed(2)}&currency=GBP&reference=${reference}`,
-                `https://sumup.com/pay?amount=${amount.toFixed(2)}&currency=GBP&reference=${reference}`
-              ];
+            // The 'foreign-tx-id' is crucial for matching the transaction on return
+            const sumupUrl = `sumup-pos://pay/1.0?affiliate-key=${affiliateKey}&amount=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}&foreign-tx-id=${reference}&callback=${encodeURIComponent(callbackUrl)}`;
+            
+            console.log("Redirecting to SumUp URL:", sumupUrl);
 
-              let schemeWorked = false;
-              
-              for (let i = 0; i < schemes.length && !schemeWorked; i++) {
-                try {
-                  console.log(`Trying scheme ${i + 1}:`, schemes[i]);
-                  window.location.href = schemes[i];
-                  
-                  // Check if the scheme worked (simplified)
-                  await new Promise(resolve => setTimeout(resolve, 1000));
-                  
-                  const userConfirm = confirm(`Attempt ${i + 1}: Did the SumUp app open?\n\nClick OK if yes, Cancel to try next method.`);
-                  if (userConfirm) {
-                    schemeWorked = true;
-                    setCurrentStep('confirmation');
-                    setTransactions(prev =>
-                      prev.map((t, i) => i === prev.length - 1 ? {
-                        ...t,
-                        status: 'completed',
-                        transactionId: reference
-                      } : t)
-                    );
-                  }
-                } catch (error) {
-                  console.log(`Scheme ${i + 1} failed:`, error);
-                }
-              }
-
-              if (!schemeWorked) {
-                setPaymentError('Could not open SumUp app on this device. Please use BACS transfer or Cash payment instead.');
-              }
-              setIsProcessingPayment(false);
-            }
-            // Desktop or unknown platform - suggest alternatives
-            else {
-              console.log('Desktop or unknown platform detected');
-              setPaymentError('Card payments require the SumUp app on a mobile device. Please use BACS transfer or Cash payment instead.');
-              setIsProcessingPayment(false);
-            }
-
-          } catch (error) {
-            console.error('Payment error:', error);
-            setPaymentError(error.message || 'Could not process card payment. Please use BACS transfer or Cash payment instead.');
-            setIsProcessingPayment(false);
-          }
+            // --- Step 4: Redirect to the SumUp URL ---
+            window.location.href = sumupUrl;
         };
+
 
         // Calculation functions
         const getFeeForDate = (feeArray, date) => {
@@ -1802,37 +1661,36 @@
         };
 
         const handlePayment = (method) => {
+          const fullTimestamp = Date.now();
+          const shortId = fullTimestamp.toString().slice(-6);
+          const prefix = getTransactionPrefix(paymentType);
+          const transactionId = `${prefix}${shortId}`;
+
+          const newTransaction = {
+            id: fullTimestamp,
+            transactionNumber: transactionId,
+            date: new Date().toISOString(),
+            type: paymentType,
+            amount: formData.total,
+            paymentMethod: method,
+            names: formData.names.filter(name => name.trim() !== '').length > 0 
+              ? formData.names.filter(name => name.trim() !== '') 
+              : (paymentType === 'day-fees' ? ['Anonymous'] : paymentType === 'donation' ? ['General Donation'] : ['Anonymous']),
+            details: getTransactionDetails(),
+            status: method === 'sumup' ? 'pending' : 'recorded' // Set to pending for SumUp
+          };
+
+          // Update state and immediately save to localStorage
+          const updatedTransactions = [...transactions, newTransaction];
+          setTransactions(updatedTransactions);
+          localStorage.setItem('mcg_transactions', JSON.stringify(updatedTransactions));
+
+
           if (method === 'sumup') {
-            // For SumUp, proceed directly with payment processing
-            const fullTimestamp = Date.now();
-            const shortId = fullTimestamp.toString().slice(-6);
-            const prefix = getTransactionPrefix(paymentType);
-            const transactionId = `${prefix}${shortId}`;
-
-            const transaction = {
-              id: fullTimestamp,
-              transactionNumber: transactionId,
-              date: new Date().toISOString(),
-              type: paymentType,
-              amount: formData.total,
-              paymentMethod: method,
-              names: formData.names.filter(name => name.trim() !== '').length > 0 
-                ? formData.names.filter(name => name.trim() !== '') 
-                : (paymentType === 'day-fees' ? ['Anonymous'] : paymentType === 'donation' ? ['General Donation'] : ['Anonymous']),
-              details: getTransactionDetails(),
-              status: 'pending'
-            };
-
-            setTransactions(prev => [...prev, transaction]);
-            setFormData(prev => ({ ...prev, paymentMethod: method, transactionId }));
-
-            const namesList = formData.names.filter(n => n.trim()).length > 0 
-              ? formData.names.filter(n => n.trim()).join(', ')
-              : (paymentType === 'day-fees' ? 'Anonymous' : paymentType === 'donation' ? 'General Donation' : 'Anonymous');
+            const namesList = newTransaction.names.join(', ');
             const description = `MCG ${paymentType.replace('-', ' ')} - ${namesList}`;
             processSumUpPayment(formData.total, transactionId, description);
           } else {
-            // For BACS and Cash, go to payment details screen
             setPendingPaymentMethod(method);
             setCurrentStep('payment-details');
           }
