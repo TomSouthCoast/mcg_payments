@@ -1537,6 +1537,7 @@
         };
 
       // --- UPDATED ANDROID INTENT: Targets the main SumUp app package ---
+// --- UPDATED ANDROID INTENT: Testing the "sumup://" scheme ---
 const processSumUpPayment = async (amount, reference, description) => {
     setIsProcessingPayment(true);
     setPaymentError(null);
@@ -1547,24 +1548,26 @@ const processSumUpPayment = async (amount, reference, description) => {
     const affiliateKey = 'c7be114e-18c5-4aed-9668-e8760e5cbab7';
     const cleanTitle = encodeURIComponent(description);
 
-    const paymentParams = `?affiliate-key=${affiliateKey}&amount=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}&foreign-tx-id=${reference}&callback=${encodeURIComponent(callbackUrl)}`;
+    // Note: The parameters are slightly different for the simpler sumup:// scheme
+    const paymentParams = `?amount=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}&foreign-tx-id=${reference}&callback=${encodeURIComponent(callbackUrl)}`;
     
     let finalUrl;
     const isAndroid = /android/i.test(navigator.userAgent);
 
     if (isAndroid) {
-        console.log("Android device detected. Using intent: URL to target main SumUp App.");
+        console.log("Android device detected. Using intent with 'sumup://' scheme.");
         
-        // This version targets the main SumUp app package name, which is often more common.
+        // Let's try the simpler "sumup://" scheme
         const mainAppPackage = 'com.kaching.merchant';
         const playStoreUrl = `https://play.google.com/store/apps/details?id=${mainAppPackage}`;
         
-        finalUrl = `intent://pay/1.0${paymentParams}#Intent;scheme=sumup-pos;package=${mainAppPackage};S.browser_fallback_url=${encodeURIComponent(playStoreUrl)};end;`;
+        finalUrl = `intent://pay${paymentParams}#Intent;scheme=sumup;package=${mainAppPackage};S.browser_fallback_url=${encodeURIComponent(playStoreUrl)};end;`;
 
     } else {
-        console.log("Non-Android (iOS) device detected. Using standard URL scheme.");
-        // This is the standard method that works for iOS.
-        finalUrl = `sumup-pos://pay/1.0${paymentParams}`;
+        console.log("Non-Android (iOS) device detected. Using 'sumup-pos://' scheme.");
+        // iOS seems to work better with the more specific sumup-pos scheme
+        const iosPaymentParams = `?affiliate-key=${affiliateKey}&amount=${amount.toFixed(2)}&currency=GBP&title=${cleanTitle}&foreign-tx-id=${reference}&callback=${encodeURIComponent(callbackUrl)}`;
+        finalUrl = `sumup-pos://pay/1.0${iosPaymentParams}`;
     }
     
     console.log("Redirecting to final URL:", finalUrl);
